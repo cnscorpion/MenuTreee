@@ -137,12 +137,13 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 list-style: none;
                 padding-left: 0;
                 margin: 0;
+                display: block; /* 确保一级目录显示 */
             }
 
             .menu-tree ul ul {
                 padding-left: 18px;
                 position: relative;
-                display: none; /* 默认隐藏子菜单 */
+                display: none; /* 只有子目录默认隐藏 */
             }
 
             .menu-tree ul ul.show {
@@ -234,6 +235,10 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
             </style>
             <script>
             document.addEventListener("DOMContentLoaded", function() {
+                // 确保目录树容器存在
+                const menuTree = document.querySelector(".menu-tree");
+                if (!menuTree) return;
+
                 // 为所有有子菜单的项添加标记和点击事件
                 const menuItems = document.querySelectorAll(".menu-tree li");
                 menuItems.forEach(item => {
@@ -241,27 +246,30 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                     if (subMenu) {
                         item.classList.add("has-children");
                         const link = item.querySelector("a");
-                        link.addEventListener("click", function(e) {
-                            e.preventDefault();
-                            item.classList.toggle("expanded");
-                            subMenu.classList.toggle("show");
-                        });
+                        if (link) {
+                            link.addEventListener("click", function(e) {
+                                e.preventDefault();
+                                e.stopPropagation(); // 防止事件冒泡
+                                item.classList.toggle("expanded");
+                                subMenu.classList.toggle("show");
+                            });
+                        }
                     }
                 });
 
                 // 点击目录项时滚动到对应位置
                 const menuLinks = document.querySelectorAll(".menu-tree a");
                 menuLinks.forEach(link => {
-                    link.addEventListener("click", function(e) {
-                        if (!link.parentElement.classList.contains("has-children")) {
+                    if (!link.parentElement.classList.contains("has-children")) {
+                        link.addEventListener("click", function(e) {
                             e.preventDefault();
                             const targetId = this.getAttribute("href").substring(1);
                             const targetElement = document.getElementById(targetId);
                             if (targetElement) {
                                 targetElement.scrollIntoView({ behavior: "smooth" });
                             }
-                        }
-                    });
+                        });
+                    }
                 });
             });
             </script>';
