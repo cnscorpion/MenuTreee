@@ -99,58 +99,39 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 max-height: calc(100vh - 180px);
                 overflow-y: auto;
                 background: #ffffff;
-                padding: 25px;
-                border-radius: 12px;
-                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-                font-size: 14px;
+                padding: 15px;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+                font-size: 13px;
                 z-index: 1000;
                 transition: all 0.3s ease;
                 border: 1px solid rgba(0, 0, 0, 0.05);
             }
 
-            .menu-tree::-webkit-scrollbar {
-                width: 4px;
-            }
-
-            .menu-tree::-webkit-scrollbar-track {
-                background: #f5f5f5;
-                border-radius: 2px;
-            }
-
-            .menu-tree::-webkit-scrollbar-thumb {
-                background: #ddd;
-                border-radius: 2px;
-            }
-
-            .menu-tree::-webkit-scrollbar-thumb:hover {
-                background: #ccc;
-            }
-
             .menu-tree h3 {
-                margin: 0 0 20px 0;
-                padding-bottom: 12px;
-                border-bottom: 2px solid #f0f0f0;
-                font-size: 18px;
+                margin: 0 0 12px 0;
+                padding-bottom: 8px;
+                border-bottom: 1px solid #f0f0f0;
+                font-size: 16px;
                 color: #2c3e50;
                 font-weight: 600;
-                letter-spacing: 0.5px;
             }
 
             .menu-tree ul {
                 list-style: none;
                 padding-left: 0;
                 margin: 0;
-                display: block; /* 确保一级目录显示 */
             }
 
             .menu-tree ul ul {
-                padding-left: 18px;
+                padding-left: 15px;
                 position: relative;
-                display: none; /* 只有子目录默认隐藏 */
+                display: none;
+                margin: 4px 0;
             }
 
             .menu-tree ul ul.show {
-                display: block; /* 显示子菜单 */
+                display: block;
             }
 
             .menu-tree ul ul::before {
@@ -159,35 +140,38 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 left: 0;
                 top: 0;
                 bottom: 0;
-                width: 2px;
+                width: 1px;
                 background: #f0f0f0;
-                border-radius: 1px;
             }
 
             .menu-tree li {
-                margin: 8px 0;
-                line-height: 1.6;
+                margin: 2px 0;
+                line-height: 1.4;
                 position: relative;
             }
 
             .menu-tree li.has-children > a::after {
                 content: "▸";
                 position: absolute;
-                right: 10px;
-                transition: transform 0.3s ease;
+                right: 8px;
+                top: 50%;
+                transform: translateY(-50%);
+                transition: transform 0.2s ease;
+                font-size: 12px;
+                color: #999;
             }
 
             .menu-tree li.has-children.expanded > a::after {
-                transform: rotate(90deg);
+                transform: translateY(-50%) rotate(90deg);
             }
 
             .menu-tree li::before {
                 content: "";
                 position: absolute;
-                left: -18px;
+                left: -15px;
                 top: 50%;
-                width: 12px;
-                height: 2px;
+                width: 10px;
+                height: 1px;
                 background: #f0f0f0;
                 display: none;
             }
@@ -197,20 +181,21 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
             }
 
             .menu-tree a {
-                color: #5a6c7d;
+                color: #666;
                 text-decoration: none;
-                transition: all 0.3s;
+                transition: all 0.2s;
                 display: block;
-                padding: 6px 10px;
+                padding: 4px 8px;
                 border-radius: 4px;
-                font-weight: 500;
+                font-weight: normal;
                 position: relative;
+                font-size: 13px;
             }
 
             .menu-tree a:hover {
                 color: #3498db;
                 background: rgba(52, 152, 219, 0.05);
-                padding-left: 15px;
+                padding-left: 12px;
             }
 
             @media screen and (max-width: 1400px) {
@@ -226,80 +211,69 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                     right: 0;
                     width: 100%;
                     max-height: none;
-                    margin: 0 0 30px 0;
-                    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-                    padding: 20px;
+                    margin: 0 0 20px 0;
+                    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+                    padding: 12px;
                 }
 
                 .menu-tree h3 {
-                    margin-bottom: 15px;
+                    margin-bottom: 10px;
                 }
 
-                /* 在响应式布局下自动展开所有目录 */
                 .menu-tree ul ul {
                     display: block !important;
                 }
 
                 .menu-tree li.has-children > a::after {
-                    transform: rotate(90deg);
+                    transform: translateY(-50%) rotate(90deg);
                 }
 
-                .menu-tree li.has-children {
-                    margin-bottom: 15px;
+                .menu-tree li {
+                    margin: 3px 0;
+                }
+
+                .menu-tree a {
+                    padding: 3px 8px;
                 }
             }
             </style>
             <script>
             document.addEventListener("DOMContentLoaded", function() {
-                // 确保目录树容器存在
                 const menuTree = document.querySelector(".menu-tree");
                 if (!menuTree) return;
 
-                // 检查窗口宽度，决定是否自动展开
                 function checkWidth() {
-                    const isNarrow = window.innerWidth <= 1200;
-                    const subMenus = menuTree.querySelectorAll("ul ul");
-                    const hasChildrenItems = menuTree.querySelectorAll(".has-children");
-                    
-                    subMenus.forEach(menu => {
-                        if (isNarrow) {
-                            menu.classList.add("show");
-                        } else {
-                            menu.classList.remove("show");
-                        }
-                    });
-                    
-                    hasChildrenItems.forEach(item => {
-                        if (isNarrow) {
+                    if (window.innerWidth <= 1200) {
+                        menuTree.querySelectorAll("ul ul").forEach(menu => {
+                            menu.style.display = "block";
+                        });
+                        menuTree.querySelectorAll(".has-children").forEach(item => {
                             item.classList.add("expanded");
-                        } else {
-                            item.classList.remove("expanded");
-                        }
-                    });
+                        });
+                    }
                 }
 
-                // 初始检查
+                // 立即检查并设置初始状态
                 checkWidth();
 
                 // 监听窗口大小变化
-                window.addEventListener("resize", checkWidth);
+                let resizeTimeout;
+                window.addEventListener("resize", function() {
+                    clearTimeout(resizeTimeout);
+                    resizeTimeout = setTimeout(checkWidth, 100);
+                });
 
                 // 为所有有子菜单的项添加标记和点击事件
-                const menuItems = document.querySelectorAll(".menu-tree li");
-                menuItems.forEach(item => {
+                menuTree.querySelectorAll("li").forEach(item => {
                     const subMenu = item.querySelector("ul");
                     if (subMenu) {
                         item.classList.add("has-children");
-                        // 将点击事件添加到整个li元素
                         item.addEventListener("click", function(e) {
-                            // 如果是响应式布局，不处理点击事件
                             if (window.innerWidth <= 1200) return;
                             
-                            // 阻止事件冒泡，防止触发父级菜单的点击事件
-                            e.stopPropagation();
-                            // 只有当点击的是当前li或其直接子a标签时才触发
                             if (e.target === this || e.target === this.querySelector("a")) {
                                 e.preventDefault();
+                                e.stopPropagation();
                                 this.classList.toggle("expanded");
                                 subMenu.classList.toggle("show");
                             }
@@ -308,8 +282,7 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 });
 
                 // 点击叶子节点时滚动到对应位置
-                const menuLinks = document.querySelectorAll(".menu-tree li:not(.has-children) > a");
-                menuLinks.forEach(link => {
+                menuTree.querySelectorAll("li:not(.has-children) > a").forEach(link => {
                     link.addEventListener("click", function(e) {
                         e.preventDefault();
                         e.stopPropagation();
