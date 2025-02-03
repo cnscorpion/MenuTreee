@@ -35,8 +35,9 @@ class MenuTree implements PluginInterface
             // 记录日志
             self::writeLog('Activating plugin...');
             
-            Plugin::factory('Widget_Archive')->header = __CLASS__ . '::header';
-            Plugin::factory('Widget_Archive')->contentEx = __CLASS__ . '::contentEx';
+            // 注册钩子
+            \Typecho\Plugin::factory('Widget_Archive')->header = array(__CLASS__, 'header');
+            \Typecho\Plugin::factory('Widget_Archive')->contentEx = array(__CLASS__, 'contentEx');
             
             self::writeLog('Plugin activated successfully');
             return _t('插件启用成功');
@@ -232,9 +233,6 @@ class MenuTree implements PluginInterface
      */
     private static function writeLog($message)
     {
-        $logFile = __DIR__ . '/plugin.log';
-        $time = date('Y-m-d H:i:s');
-        $logMessage = "[$time] $message\n";
-        file_put_contents($logFile, $logMessage, FILE_APPEND);
+        error_log('[MenuTree] ' . $message, 0);
     }
 } 
