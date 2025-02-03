@@ -99,7 +99,7 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 max-height: calc(100vh - 180px);
                 overflow-y: auto;
                 background: #ffffff;
-                padding: 15px;
+                padding: 12px;
                 border-radius: 8px;
                 box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
                 font-size: 13px;
@@ -109,7 +109,7 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
             }
 
             .menu-tree h3 {
-                margin: 0 0 12px 0;
+                margin: 0 0 10px 0;
                 padding-bottom: 8px;
                 border-bottom: 1px solid #f0f0f0;
                 font-size: 16px;
@@ -124,14 +124,10 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
             }
 
             .menu-tree ul ul {
-                padding-left: 15px;
+                padding-left: 12px;
                 position: relative;
-                display: none;
-                margin: 4px 0;
-            }
-
-            .menu-tree ul ul.show {
                 display: block;
+                margin: 2px 0;
             }
 
             .menu-tree ul ul::before {
@@ -145,39 +141,13 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
             }
 
             .menu-tree li {
-                margin: 2px 0;
+                margin: 1px 0;
                 line-height: 1.4;
                 position: relative;
             }
 
-            .menu-tree li.has-children > a::after {
-                content: "▸";
-                position: absolute;
-                right: 8px;
-                top: 50%;
-                transform: translateY(-50%);
-                transition: transform 0.2s ease;
-                font-size: 12px;
-                color: #999;
-            }
-
-            .menu-tree li.has-children.expanded > a::after {
-                transform: translateY(-50%) rotate(90deg);
-            }
-
             .menu-tree li::before {
-                content: "";
-                position: absolute;
-                left: -15px;
-                top: 50%;
-                width: 10px;
-                height: 1px;
-                background: #f0f0f0;
                 display: none;
-            }
-
-            .menu-tree ul ul li::before {
-                display: block;
             }
 
             .menu-tree a {
@@ -185,7 +155,7 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 text-decoration: none;
                 transition: all 0.2s;
                 display: block;
-                padding: 4px 8px;
+                padding: 3px 6px;
                 border-radius: 4px;
                 font-weight: normal;
                 position: relative;
@@ -195,7 +165,7 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
             .menu-tree a:hover {
                 color: #3498db;
                 background: rgba(52, 152, 219, 0.05);
-                padding-left: 12px;
+                padding-left: 8px;
             }
 
             @media screen and (max-width: 1400px) {
@@ -213,28 +183,23 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                     max-height: none;
                     margin: 0 0 20px 0;
                     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-                    padding: 12px;
+                    padding: 10px;
                 }
 
                 .menu-tree h3 {
-                    margin-bottom: 10px;
+                    margin-bottom: 8px;
                 }
 
                 .menu-tree ul ul {
-                    display: block !important;
-                    padding-left: 15px;
-                }
-
-                .menu-tree li.has-children > a::after {
-                    transform: translateY(-50%) rotate(90deg) !important;
+                    padding-left: 12px;
                 }
 
                 .menu-tree li {
-                    margin: 3px 0;
+                    margin: 1px 0;
                 }
 
                 .menu-tree a {
-                    padding: 3px 8px;
+                    padding: 2px 6px;
                 }
             }
             </style>
@@ -243,77 +208,8 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 const menuTree = document.querySelector(".menu-tree");
                 if (!menuTree) return;
 
-                function expandAll() {
-                    menuTree.querySelectorAll("ul ul").forEach(menu => {
-                        menu.style.display = "block";
-                        menu.classList.add("show");
-                    });
-                    
-                    menuTree.querySelectorAll("li.has-children").forEach(item => {
-                        item.classList.add("expanded");
-                    });
-                }
-
-                function collapseAll() {
-                    menuTree.querySelectorAll("ul ul").forEach(menu => {
-                        menu.style.display = "none";
-                        menu.classList.remove("show");
-                    });
-                    
-                    menuTree.querySelectorAll("li.has-children").forEach(item => {
-                        item.classList.remove("expanded");
-                    });
-                }
-
-                function handleResponsive() {
-                    if (window.innerWidth <= 1200) {
-                        expandAll();
-                    } else {
-                        collapseAll();
-                    }
-                }
-
-                // 初始化时立即执行一次
-                handleResponsive();
-
-                // 监听窗口大小变化
-                window.addEventListener("resize", handleResponsive);
-
-                // 为所有有子菜单的项添加标记和点击事件
-                menuTree.querySelectorAll("li").forEach(item => {
-                    const subMenu = item.querySelector("ul");
-                    if (subMenu) {
-                        item.classList.add("has-children");
-                        // 将点击事件添加到a标签
-                        const link = item.querySelector("a");
-                        if (link) {
-                            link.onclick = function(e) {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                
-                                // 如果是响应式布局，不处理点击事件
-                                if (window.innerWidth <= 1200) {
-                                    return;
-                                }
-
-                                // 切换展开状态
-                                const isExpanded = item.classList.contains("expanded");
-                                if (isExpanded) {
-                                    item.classList.remove("expanded");
-                                    subMenu.classList.remove("show");
-                                    subMenu.style.display = "none";
-                                } else {
-                                    item.classList.add("expanded");
-                                    subMenu.classList.add("show");
-                                    subMenu.style.display = "block";
-                                }
-                            };
-                        }
-                    }
-                });
-
                 // 点击叶子节点时滚动到对应位置
-                menuTree.querySelectorAll("li:not(.has-children) > a").forEach(link => {
+                menuTree.querySelectorAll("a").forEach(link => {
                     link.onclick = function(e) {
                         e.preventDefault();
                         e.stopPropagation();
@@ -324,9 +220,6 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                         }
                     };
                 });
-
-                // 页面加载后再次检查确保状态正确
-                window.addEventListener("load", handleResponsive);
             });
             </script>';
         } catch (Exception $e) {
