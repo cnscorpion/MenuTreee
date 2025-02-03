@@ -25,7 +25,8 @@ class MenuTree implements PluginInterface
      */
     public static function activate()
     {
-        Plugin::factory('Widget_Archive')->beforeRender = __CLASS__ . '::render';
+        Plugin::factory('Widget_Archive')->header = __CLASS__ . '::header';
+        Plugin::factory('Widget_Archive')->contentEx = __CLASS__ . '::contentEx';
         return _t('插件启用成功');
     }
 
@@ -56,79 +57,84 @@ class MenuTree implements PluginInterface
     }
 
     /**
-     * 插件实现方法
+     * 输出头部CSS
      */
-    public static function render($archive)
+    public static function header()
     {
-        if ($archive instanceof Archive && $archive->is('single')) {
-            echo '<style>
+        echo '<style>
+        .menu-tree {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            width: 250px;
+            max-height: calc(100vh - 160px);
+            overflow-y: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            font-size: 14px;
+            z-index: 1000;
+        }
+        .menu-tree h3 {
+            margin: 0 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            font-size: 16px;
+            color: #333;
+            font-weight: bold;
+        }
+        .menu-tree ul {
+            list-style: none;
+            padding-left: 0;
+            margin: 0;
+        }
+        .menu-tree ul ul {
+            padding-left: 20px;
+        }
+        .menu-tree li {
+            margin: 8px 0;
+            line-height: 1.5;
+        }
+        .menu-tree a {
+            color: #666;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: block;
+            padding: 3px 0;
+        }
+        .menu-tree a:hover {
+            color: #1a73e8;
+            padding-left: 5px;
+        }
+        @media screen and (max-width: 1200px) {
             .menu-tree {
-                position: fixed;
-                top: 80px;
-                right: 20px;
-                width: 250px;
-                max-height: calc(100vh - 160px);
-                overflow-y: auto;
-                background: #fff;
-                padding: 20px;
-                border-radius: 8px;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-                font-size: 14px;
-                z-index: 1000;
+                position: relative;
+                top: 0;
+                right: 0;
+                width: 100%;
+                max-height: none;
+                margin-bottom: 20px;
+                box-shadow: none;
+                border: 1px solid #eee;
             }
-            .menu-tree h3 {
-                margin: 0 0 15px 0;
-                padding-bottom: 10px;
-                border-bottom: 1px solid #eee;
-                font-size: 16px;
-                color: #333;
-                font-weight: bold;
-            }
-            .menu-tree ul {
-                list-style: none;
-                padding-left: 0;
-                margin: 0;
-            }
-            .menu-tree ul ul {
-                padding-left: 20px;
-            }
-            .menu-tree li {
-                margin: 8px 0;
-                line-height: 1.5;
-            }
-            .menu-tree a {
-                color: #666;
-                text-decoration: none;
-                transition: all 0.3s;
-                display: block;
-                padding: 3px 0;
-            }
-            .menu-tree a:hover {
-                color: #1a73e8;
-                padding-left: 5px;
-            }
-            @media screen and (max-width: 1200px) {
-                .menu-tree {
-                    position: relative;
-                    top: 0;
-                    right: 0;
-                    width: 100%;
-                    max-height: none;
-                    margin-bottom: 20px;
-                    box-shadow: none;
-                    border: 1px solid #eee;
-                }
-            }
-            </style>';
-            
-            $content = $archive->content;
+        }
+        </style>';
+    }
+
+    /**
+     * 内容处理
+     */
+    public static function contentEx($content, $archive)
+    {
+        if ($archive->is('single')) {
+            $matches = array();
             preg_match_all('/<h([1-6])[^>]*>(.*?)<\/h\1>/i', $content, $matches);
             
             if (!empty($matches[0])) {
                 $tree = '<div class="menu-tree"><h3>目录</h3><ul>';
                 $lastLevel = 0;
                 $counters = array_fill(0, 6, 0);
-                $parentCounters = array_fill(0, 6, 0);
                 
                 for ($i = 0; $i < count($matches[0]); $i++) {
                     $level = (int)$matches[1][$i];
@@ -177,9 +183,9 @@ class MenuTree implements PluginInterface
                 }
                 
                 $tree .= str_repeat('</ul>', $lastLevel) . '</ul></div>';
-                echo $tree;
-                $archive->content = $content;
+                return $tree . $content;
             }
         }
+        return $content;
     }
 } 
