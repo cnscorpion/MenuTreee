@@ -242,14 +242,39 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 const menuTree = document.querySelector(".menu-tree");
                 if (!menuTree) return;
 
+                function expandAll() {
+                    const subMenus = menuTree.querySelectorAll("ul ul");
+                    const hasChildrenItems = menuTree.querySelectorAll("li.has-children");
+                    
+                    subMenus.forEach(menu => {
+                        menu.classList.add("show");
+                        menu.style.display = "block";
+                    });
+                    
+                    hasChildrenItems.forEach(item => {
+                        item.classList.add("expanded");
+                    });
+                }
+
+                function collapseAll() {
+                    const subMenus = menuTree.querySelectorAll("ul ul");
+                    const hasChildrenItems = menuTree.querySelectorAll("li.has-children");
+                    
+                    subMenus.forEach(menu => {
+                        menu.classList.remove("show");
+                        menu.style.display = "none";
+                    });
+                    
+                    hasChildrenItems.forEach(item => {
+                        item.classList.remove("expanded");
+                    });
+                }
+
                 function checkWidth() {
                     if (window.innerWidth <= 1200) {
-                        menuTree.querySelectorAll("ul ul").forEach(menu => {
-                            menu.style.display = "block";
-                        });
-                        menuTree.querySelectorAll(".has-children").forEach(item => {
-                            item.classList.add("expanded");
-                        });
+                        expandAll();
+                    } else {
+                        collapseAll();
                     }
                 }
 
@@ -268,16 +293,21 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                     const subMenu = item.querySelector("ul");
                     if (subMenu) {
                         item.classList.add("has-children");
-                        item.addEventListener("click", function(e) {
-                            if (window.innerWidth <= 1200) return;
-                            
-                            if (e.target === this || e.target === this.querySelector("a")) {
+                        const link = item.querySelector("a");
+                        if (link) {
+                            link.addEventListener("click", function(e) {
+                                if (window.innerWidth <= 1200) return;
                                 e.preventDefault();
                                 e.stopPropagation();
-                                this.classList.toggle("expanded");
+                                item.classList.toggle("expanded");
                                 subMenu.classList.toggle("show");
-                            }
-                        });
+                                if (subMenu.classList.contains("show")) {
+                                    subMenu.style.display = "block";
+                                } else {
+                                    subMenu.style.display = "none";
+                                }
+                            });
+                        }
                     }
                 });
 
@@ -293,6 +323,9 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                         }
                     });
                 });
+
+                // 确保初始状态正确
+                setTimeout(checkWidth, 100);
             });
             </script>';
         } catch (Exception $e) {
