@@ -142,6 +142,11 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
             .menu-tree ul ul {
                 padding-left: 18px;
                 position: relative;
+                display: none; /* 默认隐藏子菜单 */
+            }
+
+            .menu-tree ul ul.show {
+                display: block; /* 显示子菜单 */
             }
 
             .menu-tree ul ul::before {
@@ -159,6 +164,17 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 margin: 8px 0;
                 line-height: 1.6;
                 position: relative;
+            }
+
+            .menu-tree li.has-children > a::after {
+                content: "▸";
+                position: absolute;
+                right: 10px;
+                transition: transform 0.3s ease;
+            }
+
+            .menu-tree li.has-children.expanded > a::after {
+                transform: rotate(90deg);
             }
 
             .menu-tree li::before {
@@ -184,6 +200,7 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 padding: 6px 10px;
                 border-radius: 4px;
                 font-weight: 500;
+                position: relative;
             }
 
             .menu-tree a:hover {
@@ -214,7 +231,40 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                     margin-bottom: 15px;
                 }
             }
-            </style>';
+            </style>
+            <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                // 为所有有子菜单的项添加标记和点击事件
+                const menuItems = document.querySelectorAll(".menu-tree li");
+                menuItems.forEach(item => {
+                    const subMenu = item.querySelector("ul");
+                    if (subMenu) {
+                        item.classList.add("has-children");
+                        const link = item.querySelector("a");
+                        link.addEventListener("click", function(e) {
+                            e.preventDefault();
+                            item.classList.toggle("expanded");
+                            subMenu.classList.toggle("show");
+                        });
+                    }
+                });
+
+                // 点击目录项时滚动到对应位置
+                const menuLinks = document.querySelectorAll(".menu-tree a");
+                menuLinks.forEach(link => {
+                    link.addEventListener("click", function(e) {
+                        if (!link.parentElement.classList.contains("has-children")) {
+                            e.preventDefault();
+                            const targetId = this.getAttribute("href").substring(1);
+                            const targetElement = document.getElementById(targetId);
+                            if (targetElement) {
+                                targetElement.scrollIntoView({ behavior: "smooth" });
+                            }
+                        }
+                    });
+                });
+            });
+            </script>';
         } catch (Exception $e) {
             debug_print('CSS输出错误：' . $e->getMessage());
         }
