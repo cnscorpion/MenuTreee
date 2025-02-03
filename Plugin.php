@@ -222,10 +222,11 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
 
                 .menu-tree ul ul {
                     display: block !important;
+                    padding-left: 15px;
                 }
 
                 .menu-tree li.has-children > a::after {
-                    transform: translateY(-50%) rotate(90deg);
+                    transform: translateY(-50%) rotate(90deg) !important;
                 }
 
                 .menu-tree li {
@@ -243,34 +244,28 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 if (!menuTree) return;
 
                 function expandAll() {
-                    const subMenus = menuTree.querySelectorAll("ul ul");
-                    const hasChildrenItems = menuTree.querySelectorAll("li.has-children");
-                    
-                    subMenus.forEach(menu => {
-                        menu.classList.add("show");
+                    menuTree.querySelectorAll("ul ul").forEach(menu => {
                         menu.style.display = "block";
+                        menu.classList.add("show");
                     });
                     
-                    hasChildrenItems.forEach(item => {
+                    menuTree.querySelectorAll("li.has-children").forEach(item => {
                         item.classList.add("expanded");
                     });
                 }
 
                 function collapseAll() {
-                    const subMenus = menuTree.querySelectorAll("ul ul");
-                    const hasChildrenItems = menuTree.querySelectorAll("li.has-children");
-                    
-                    subMenus.forEach(menu => {
-                        menu.classList.remove("show");
+                    menuTree.querySelectorAll("ul ul").forEach(menu => {
                         menu.style.display = "none";
+                        menu.classList.remove("show");
                     });
                     
-                    hasChildrenItems.forEach(item => {
+                    menuTree.querySelectorAll("li.has-children").forEach(item => {
                         item.classList.remove("expanded");
                     });
                 }
 
-                function checkWidth() {
+                function handleResponsive() {
                     if (window.innerWidth <= 1200) {
                         expandAll();
                     } else {
@@ -278,42 +273,48 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                     }
                 }
 
-                // 立即检查并设置初始状态
-                checkWidth();
+                // 初始化时立即执行一次
+                handleResponsive();
 
                 // 监听窗口大小变化
-                let resizeTimeout;
-                window.addEventListener("resize", function() {
-                    clearTimeout(resizeTimeout);
-                    resizeTimeout = setTimeout(checkWidth, 100);
-                });
+                window.addEventListener("resize", handleResponsive);
 
                 // 为所有有子菜单的项添加标记和点击事件
                 menuTree.querySelectorAll("li").forEach(item => {
                     const subMenu = item.querySelector("ul");
                     if (subMenu) {
                         item.classList.add("has-children");
+                        // 将点击事件添加到a标签
                         const link = item.querySelector("a");
                         if (link) {
-                            link.addEventListener("click", function(e) {
-                                if (window.innerWidth <= 1200) return;
+                            link.onclick = function(e) {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                item.classList.toggle("expanded");
-                                subMenu.classList.toggle("show");
-                                if (subMenu.classList.contains("show")) {
-                                    subMenu.style.display = "block";
-                                } else {
-                                    subMenu.style.display = "none";
+                                
+                                // 如果是响应式布局，不处理点击事件
+                                if (window.innerWidth <= 1200) {
+                                    return;
                                 }
-                            });
+
+                                // 切换展开状态
+                                const isExpanded = item.classList.contains("expanded");
+                                if (isExpanded) {
+                                    item.classList.remove("expanded");
+                                    subMenu.classList.remove("show");
+                                    subMenu.style.display = "none";
+                                } else {
+                                    item.classList.add("expanded");
+                                    subMenu.classList.add("show");
+                                    subMenu.style.display = "block";
+                                }
+                            };
                         }
                     }
                 });
 
                 // 点击叶子节点时滚动到对应位置
                 menuTree.querySelectorAll("li:not(.has-children) > a").forEach(link => {
-                    link.addEventListener("click", function(e) {
+                    link.onclick = function(e) {
                         e.preventDefault();
                         e.stopPropagation();
                         const targetId = this.getAttribute("href").substring(1);
@@ -321,11 +322,11 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                         if (targetElement) {
                             targetElement.scrollIntoView({ behavior: "smooth" });
                         }
-                    });
+                    };
                 });
 
-                // 确保初始状态正确
-                setTimeout(checkWidth, 100);
+                // 页面加载后再次检查确保状态正确
+                window.addEventListener("load", handleResponsive);
             });
             </script>';
         } catch (Exception $e) {
