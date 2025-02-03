@@ -32,17 +32,19 @@ class MenuTree implements PluginInterface
             error_reporting(E_ALL);
             ini_set('display_errors', 1);
             
-            // 记录日志
-            self::writeLog('Activating plugin...');
+            // 直接输出调试信息
+            echo '<!-- Debug: Activating MenuTree plugin -->';
             
             // 注册钩子
             \Typecho\Plugin::factory('Widget_Archive')->header = array(__CLASS__, 'header');
             \Typecho\Plugin::factory('Widget_Archive')->contentEx = array(__CLASS__, 'contentEx');
             
-            self::writeLog('Plugin activated successfully');
+            echo '<!-- Debug: Hooks registered successfully -->';
             return _t('插件启用成功');
-        } catch (\Exception $e) {
-            self::writeLog('Activation error: ' . $e->getMessage());
+        } catch (\Throwable $e) {
+            // 直接输出错误信息
+            echo '<!-- Error: ' . htmlspecialchars($e->getMessage()) . ' -->';
+            echo '<!-- Trace: ' . htmlspecialchars($e->getTraceAsString()) . ' -->';
             throw new \Typecho\Plugin\Exception(_t('插件启用失败: %s', $e->getMessage()));
         }
     }
