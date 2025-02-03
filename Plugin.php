@@ -1,5 +1,5 @@
 <?php
-namespace TypechoPlugin\MenuTree;
+namespace MenuTreePlugin;
 
 use Typecho\Plugin\PluginInterface;
 use Typecho\Widget\Helper\Form;
@@ -18,7 +18,7 @@ if (!defined('__TYPECHO_ROOT_DIR__')) {
  * @version 1.0.0
  * @link https://github.com/cnscorpion/MenuTree
  */
-class Plugin implements PluginInterface
+class MenuTree implements PluginInterface
 {
     /**
      * 激活插件方法,如果激活失败,直接抛出异常
