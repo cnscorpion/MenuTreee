@@ -90,49 +90,114 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
             echo '<style>
             .menu-tree {
                 position: fixed;
-                top: 80px;
-                right: 20px;
-                width: 250px;
-                max-height: calc(100vh - 160px);
+                top: 100px;
+                right: 30px;
+                width: 280px;
+                max-height: calc(100vh - 180px);
                 overflow-y: auto;
-                background: #fff;
-                padding: 20px;
-                border-radius: 8px;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                background: #ffffff;
+                padding: 25px;
+                border-radius: 12px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
                 font-size: 14px;
                 z-index: 1000;
+                transition: all 0.3s ease;
+                border: 1px solid rgba(0, 0, 0, 0.05);
             }
+
+            .menu-tree::-webkit-scrollbar {
+                width: 4px;
+            }
+
+            .menu-tree::-webkit-scrollbar-track {
+                background: #f5f5f5;
+                border-radius: 2px;
+            }
+
+            .menu-tree::-webkit-scrollbar-thumb {
+                background: #ddd;
+                border-radius: 2px;
+            }
+
+            .menu-tree::-webkit-scrollbar-thumb:hover {
+                background: #ccc;
+            }
+
             .menu-tree h3 {
-                margin: 0 0 15px 0;
-                padding-bottom: 10px;
-                border-bottom: 1px solid #eee;
-                font-size: 16px;
-                color: #333;
-                font-weight: bold;
+                margin: 0 0 20px 0;
+                padding-bottom: 12px;
+                border-bottom: 2px solid #f0f0f0;
+                font-size: 18px;
+                color: #2c3e50;
+                font-weight: 600;
+                letter-spacing: 0.5px;
             }
+
             .menu-tree ul {
                 list-style: none;
                 padding-left: 0;
                 margin: 0;
             }
+
             .menu-tree ul ul {
-                padding-left: 20px;
+                padding-left: 18px;
+                position: relative;
             }
+
+            .menu-tree ul ul::before {
+                content: "";
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 2px;
+                background: #f0f0f0;
+                border-radius: 1px;
+            }
+
             .menu-tree li {
                 margin: 8px 0;
-                line-height: 1.5;
+                line-height: 1.6;
+                position: relative;
             }
+
+            .menu-tree li::before {
+                content: "";
+                position: absolute;
+                left: -18px;
+                top: 50%;
+                width: 12px;
+                height: 2px;
+                background: #f0f0f0;
+                display: none;
+            }
+
+            .menu-tree ul ul li::before {
+                display: block;
+            }
+
             .menu-tree a {
-                color: #666;
+                color: #5a6c7d;
                 text-decoration: none;
                 transition: all 0.3s;
                 display: block;
-                padding: 3px 0;
+                padding: 6px 10px;
+                border-radius: 4px;
+                font-weight: 500;
             }
+
             .menu-tree a:hover {
-                color: #1a73e8;
-                padding-left: 5px;
+                color: #3498db;
+                background: rgba(52, 152, 219, 0.05);
+                padding-left: 15px;
             }
+
+            @media screen and (max-width: 1400px) {
+                .menu-tree {
+                    width: 250px;
+                }
+            }
+
             @media screen and (max-width: 1200px) {
                 .menu-tree {
                     position: relative;
@@ -140,9 +205,13 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                     right: 0;
                     width: 100%;
                     max-height: none;
-                    margin-bottom: 20px;
-                    box-shadow: none;
-                    border: 1px solid #eee;
+                    margin: 0 0 30px 0;
+                    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+                    padding: 20px;
+                }
+
+                .menu-tree h3 {
+                    margin-bottom: 15px;
                 }
             }
             </style>';
