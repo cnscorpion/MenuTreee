@@ -10,9 +10,12 @@ error_reporting(E_ALL);
 
 // 定义一个全局错误处理函数
 function debug_print($message) {
+    // 注释掉调试信息的显示
+    /*
     echo "<pre style='background:#fff;color:#333;padding:10px;margin:10px;border:1px solid #ddd;'>";
     echo "Debug: " . htmlspecialchars(print_r($message, true));
     echo "</pre>";
+    */
 }
 
 // 设置错误处理器
@@ -231,6 +234,19 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 .menu-tree h3 {
                     margin-bottom: 15px;
                 }
+
+                /* 在响应式布局下自动展开所有目录 */
+                .menu-tree ul ul {
+                    display: block !important;
+                }
+
+                .menu-tree li.has-children > a::after {
+                    transform: rotate(90deg);
+                }
+
+                .menu-tree li.has-children {
+                    margin-bottom: 15px;
+                }
             }
             </style>
             <script>
@@ -238,6 +254,35 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 // 确保目录树容器存在
                 const menuTree = document.querySelector(".menu-tree");
                 if (!menuTree) return;
+
+                // 检查窗口宽度，决定是否自动展开
+                function checkWidth() {
+                    const isNarrow = window.innerWidth <= 1200;
+                    const subMenus = menuTree.querySelectorAll("ul ul");
+                    const hasChildrenItems = menuTree.querySelectorAll(".has-children");
+                    
+                    subMenus.forEach(menu => {
+                        if (isNarrow) {
+                            menu.classList.add("show");
+                        } else {
+                            menu.classList.remove("show");
+                        }
+                    });
+                    
+                    hasChildrenItems.forEach(item => {
+                        if (isNarrow) {
+                            item.classList.add("expanded");
+                        } else {
+                            item.classList.remove("expanded");
+                        }
+                    });
+                }
+
+                // 初始检查
+                checkWidth();
+
+                // 监听窗口大小变化
+                window.addEventListener("resize", checkWidth);
 
                 // 为所有有子菜单的项添加标记和点击事件
                 const menuItems = document.querySelectorAll(".menu-tree li");
@@ -247,6 +292,9 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                         item.classList.add("has-children");
                         // 将点击事件添加到整个li元素
                         item.addEventListener("click", function(e) {
+                            // 如果是响应式布局，不处理点击事件
+                            if (window.innerWidth <= 1200) return;
+                            
                             // 阻止事件冒泡，防止触发父级菜单的点击事件
                             e.stopPropagation();
                             // 只有当点击的是当前li或其直接子a标签时才触发
