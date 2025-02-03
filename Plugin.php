@@ -1,12 +1,9 @@
 <?php
 namespace MenuTreePlugin;
 
-use Typecho\Plugin\PluginInterface;
-use Typecho\Widget\Helper\Form;
-use Widget\Archive;
-use Typecho\Plugin;
-use Typecho\Common;
-use Typecho\Db;
+if (!defined('__TYPECHO_ROOT_DIR__')) {
+    exit;
+}
 
 // 开启错误显示
 ini_set('display_errors', 1);
@@ -30,10 +27,6 @@ set_exception_handler(function($e) {
     debug_print("Exception: " . $e->getMessage() . "\nTrace: " . $e->getTraceAsString());
 });
 
-if (!defined('__TYPECHO_ROOT_DIR__')) {
-    exit;
-}
-
 /**
  * 为文章自动生成目录树
  * 
@@ -42,7 +35,7 @@ if (!defined('__TYPECHO_ROOT_DIR__')) {
  * @version 1.0.0
  * @link https://github.com/cnscorpion/MenuTree
  */
-class MenuTree implements PluginInterface
+class MenuTree implements \Typecho_Plugin_Interface
 {
     /**
      * 激活插件方法,如果激活失败,直接抛出异常
@@ -51,22 +44,18 @@ class MenuTree implements PluginInterface
     {
         try {
             debug_print('开始激活插件...');
-            debug_print('当前类名: ' . __CLASS__);
-            debug_print('当前文件: ' . __FILE__);
             
-            // 注册钩子
-            $result1 = \Typecho\Plugin::factory('Widget_Archive')->header = array(__CLASS__, 'header');
-            debug_print('header钩子注册结果: ' . print_r($result1, true));
+            \Typecho_Plugin::factory('Widget_Archive')->header = array('MenuTreePlugin\\MenuTree', 'header');
+            debug_print('header钩子注册完成');
             
-            $result2 = \Typecho\Plugin::factory('Widget_Archive')->contentEx = array(__CLASS__, 'contentEx');
-            debug_print('contentEx钩子注册结果: ' . print_r($result2, true));
+            \Typecho_Plugin::factory('Widget_Archive')->contentEx = array('MenuTreePlugin\\MenuTree', 'contentEx');
+            debug_print('contentEx钩子注册完成');
             
-            debug_print('插件激活完成');
             return _t('插件启用成功');
         } catch (\Throwable $e) {
             debug_print('激活过程出现错误：' . $e->getMessage());
             debug_print('错误追踪：' . $e->getTraceAsString());
-            throw $e;
+            throw new \Typecho_Plugin_Exception(_t('插件启用失败: %s', $e->getMessage()));
         }
     }
 
@@ -80,16 +69,16 @@ class MenuTree implements PluginInterface
             return _t('插件禁用成功');
         } catch (\Throwable $e) {
             debug_print('禁用过程出现错误：' . $e->getMessage());
-            throw $e;
+            throw new \Typecho_Plugin_Exception(_t('插件禁用失败: %s', $e->getMessage()));
         }
     }
 
     /**
      * 获取插件配置面板
      *
-     * @param Form $form 配置面板
+     * @param \Typecho_Widget_Helper_Form $form 配置面板
      */
-    public static function config(Form $form)
+    public static function config(\Typecho_Widget_Helper_Form $form)
     {
         try {
             debug_print('加载配置面板...');
@@ -101,9 +90,9 @@ class MenuTree implements PluginInterface
     /**
      * 个人用户的配置面板
      *
-     * @param Form $form
+     * @param \Typecho_Widget_Helper_Form $form
      */
-    public static function personalConfig(Form $form)
+    public static function personalConfig(\Typecho_Widget_Helper_Form $form)
     {
         try {
             debug_print('加载个人配置面板...');
@@ -187,14 +176,14 @@ class MenuTree implements PluginInterface
     /**
      * 内容处理
      */
-    public static function contentEx($content, $archive)
+    public static function contentEx($content, $widget)
     {
         try {
             debug_print('开始处理内容...');
             debug_print('内容类型: ' . gettype($content));
-            debug_print('Archive类型: ' . get_class($archive));
+            debug_print('Widget类型: ' . get_class($widget));
             
-            if ($archive->is('single')) {
+            if ($widget instanceof \Widget_Archive && $widget->is('single')) {
                 $matches = array();
                 preg_match_all('/<h([1-6])[^>]*>(.*?)<\/h\1>/i', $content, $matches);
                 
