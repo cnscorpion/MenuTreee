@@ -8,6 +8,28 @@ use Typecho\Plugin;
 use Typecho\Common;
 use Typecho\Db;
 
+// 开启错误显示
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+// 定义一个全局错误处理函数
+function debug_print($message) {
+    echo "<pre style='background:#fff;color:#333;padding:10px;margin:10px;border:1px solid #ddd;'>";
+    echo "Debug: " . htmlspecialchars(print_r($message, true));
+    echo "</pre>";
+}
+
+// 设置错误处理器
+set_error_handler(function($errno, $errstr, $errfile, $errline) {
+    debug_print("Error [$errno] $errstr on line $errline in file $errfile");
+});
+
+// 设置异常处理器
+set_exception_handler(function($e) {
+    debug_print("Exception: " . $e->getMessage() . "\nTrace: " . $e->getTraceAsString());
+});
+
 if (!defined('__TYPECHO_ROOT_DIR__')) {
     exit;
 }
@@ -28,24 +50,23 @@ class MenuTree implements PluginInterface
     public static function activate()
     {
         try {
-            // 开启错误显示
-            error_reporting(E_ALL);
-            ini_set('display_errors', 1);
-            
-            // 直接输出调试信息
-            echo '<!-- Debug: Activating MenuTree plugin -->';
+            debug_print('开始激活插件...');
+            debug_print('当前类名: ' . __CLASS__);
+            debug_print('当前文件: ' . __FILE__);
             
             // 注册钩子
-            \Typecho\Plugin::factory('Widget_Archive')->header = array(__CLASS__, 'header');
-            \Typecho\Plugin::factory('Widget_Archive')->contentEx = array(__CLASS__, 'contentEx');
+            $result1 = \Typecho\Plugin::factory('Widget_Archive')->header = array(__CLASS__, 'header');
+            debug_print('header钩子注册结果: ' . print_r($result1, true));
             
-            echo '<!-- Debug: Hooks registered successfully -->';
+            $result2 = \Typecho\Plugin::factory('Widget_Archive')->contentEx = array(__CLASS__, 'contentEx');
+            debug_print('contentEx钩子注册结果: ' . print_r($result2, true));
+            
+            debug_print('插件激活完成');
             return _t('插件启用成功');
         } catch (\Throwable $e) {
-            // 直接输出错误信息
-            echo '<!-- Error: ' . htmlspecialchars($e->getMessage()) . ' -->';
-            echo '<!-- Trace: ' . htmlspecialchars($e->getTraceAsString()) . ' -->';
-            throw new \Typecho\Plugin\Exception(_t('插件启用失败: %s', $e->getMessage()));
+            debug_print('激活过程出现错误：' . $e->getMessage());
+            debug_print('错误追踪：' . $e->getTraceAsString());
+            throw $e;
         }
     }
 
@@ -55,11 +76,11 @@ class MenuTree implements PluginInterface
     public static function deactivate()
     {
         try {
-            self::writeLog('Deactivating plugin...');
+            debug_print('开始禁用插件...');
             return _t('插件禁用成功');
-        } catch (\Exception $e) {
-            self::writeLog('Deactivation error: ' . $e->getMessage());
-            throw new \Typecho\Plugin\Exception(_t('插件禁用失败: %s', $e->getMessage()));
+        } catch (\Throwable $e) {
+            debug_print('禁用过程出现错误：' . $e->getMessage());
+            throw $e;
         }
     }
 
@@ -70,6 +91,11 @@ class MenuTree implements PluginInterface
      */
     public static function config(Form $form)
     {
+        try {
+            debug_print('加载配置面板...');
+        } catch (\Throwable $e) {
+            debug_print('配置面板加载错误：' . $e->getMessage());
+        }
     }
 
     /**
@@ -79,6 +105,11 @@ class MenuTree implements PluginInterface
      */
     public static function personalConfig(Form $form)
     {
+        try {
+            debug_print('加载个人配置面板...');
+        } catch (\Throwable $e) {
+            debug_print('个人配置面板加载错误：' . $e->getMessage());
+        }
     }
 
     /**
@@ -87,6 +118,7 @@ class MenuTree implements PluginInterface
     public static function header()
     {
         try {
+            debug_print('开始输出CSS...');
             echo '<style>
             .menu-tree {
                 position: fixed;
@@ -146,8 +178,9 @@ class MenuTree implements PluginInterface
                 }
             }
             </style>';
-        } catch (\Exception $e) {
-            self::writeLog('Header error: ' . $e->getMessage());
+            debug_print('CSS输出完成');
+        } catch (\Throwable $e) {
+            debug_print('CSS输出错误：' . $e->getMessage());
         }
     }
 
@@ -157,14 +190,16 @@ class MenuTree implements PluginInterface
     public static function contentEx($content, $archive)
     {
         try {
-            self::writeLog('Processing content...');
+            debug_print('开始处理内容...');
+            debug_print('内容类型: ' . gettype($content));
+            debug_print('Archive类型: ' . get_class($archive));
             
             if ($archive->is('single')) {
                 $matches = array();
                 preg_match_all('/<h([1-6])[^>]*>(.*?)<\/h\1>/i', $content, $matches);
                 
                 if (!empty($matches[0])) {
-                    self::writeLog('Found ' . count($matches[0]) . ' headings');
+                    debug_print('找到' . count($matches[0]) . '个标题');
                     
                     $tree = '<div class="menu-tree"><h3>目录</h3><ul>';
                     $lastLevel = 0;
@@ -175,7 +210,6 @@ class MenuTree implements PluginInterface
                         $title = strip_tags($matches[2][$i]);
                         $id = 'title-' . $i;
                         
-                        // 更新计数器
                         if ($level === 1) {
                             $counters[0]++;
                             $number = $counters[0];
@@ -200,12 +234,10 @@ class MenuTree implements PluginInterface
                             }
                         }
                         
-                        // 添加编号到标题
                         $content = str_replace($matches[0][$i], 
                             '<h' . $level . ' id="' . $id . '">' . $number . '. ' . $matches[2][$i] . '</h' . $level . '>', 
                             $content);
                         
-                        // 处理目录层级
                         if ($level > $lastLevel) {
                             $tree .= '<ul>';
                         } else if ($level < $lastLevel) {
@@ -217,13 +249,14 @@ class MenuTree implements PluginInterface
                     }
                     
                     $tree .= str_repeat('</ul>', $lastLevel) . '</ul></div>';
-                    self::writeLog('Menu tree generated successfully');
+                    debug_print('目录生成完成');
                     return $tree . $content;
                 }
             }
             return $content;
-        } catch (\Exception $e) {
-            self::writeLog('Content processing error: ' . $e->getMessage());
+        } catch (\Throwable $e) {
+            debug_print('内容处理错误：' . $e->getMessage());
+            debug_print('错误追踪：' . $e->getTraceAsString());
             return $content;
         }
     }
