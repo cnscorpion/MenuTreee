@@ -292,10 +292,10 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                     debug_print('找到标题数量: ' . count($matches[0]));
                     
                     // 初始化目录树
-                    $tree = '<div class="menu-tree"><h3>目录</h3>';
+                    $tree = '<div class="menu-tree"><h3>目录</h3><ul>';
                     $structure = array();
                     $minLevel = min(array_map('intval', $matches[1]));
-                    $lastLevel = $minLevel - 1;
+                    $lastLevel = $minLevel;
                     $counters = array_fill(0, 6, 0);
                     
                     // 第一遍循环：构建结构数组
@@ -305,21 +305,18 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                         $id = 'title-' . $i;
                         
                         // 计算编号
-                        if ($level === $minLevel) {
-                            $counters[$level-1]++;
-                            $number = $counters[$level-1];
-                            for ($j = $level; $j < 6; $j++) {
-                                $counters[$j] = 0;
+                        $number = '';
+                        for ($j = $minLevel; $j <= $level; $j++) {
+                            if ($j == $level) {
+                                $counters[$j-1]++;
+                                $number .= $counters[$j-1];
+                            } else {
+                                $number .= $counters[$j-1] . '.';
                             }
-                        } else {
-                            $counters[$level-1]++;
-                            $number = '';
-                            for ($j = $minLevel-1; $j < $level; $j++) {
-                                $number .= $counters[$j] . '.';
-                            }
-                            for ($j = $level; $j < 6; $j++) {
-                                $counters[$j] = 0;
-                            }
+                        }
+                        // 重置更深层级的计数器
+                        for ($j = $level + 1; $j < 6; $j++) {
+                            $counters[$j-1] = 0;
                         }
                         
                         $structure[] = array(
@@ -332,38 +329,38 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                         // 替换原文中的标题
                         $content = str_replace(
                             $matches[0][$i],
-                            '<h' . $level . ' id="' . $id . '">' . $number . ' ' . $matches[2][$i] . '</h' . $level . '>',
+                            '<h' . $level . ' id="' . $id . '">' . $number . '. ' . $matches[2][$i] . '</h' . $level . '>',
                             $content
                         );
                     }
                     
                     // 第二遍循环：构建HTML
-                    $tree .= '<ul>';
                     foreach ($structure as $item) {
                         $level = $item['level'];
                         
+                        // 处理层级变化
                         if ($level > $lastLevel) {
-                            // 开始新的子列表
+                            // 进入更深层级，开始新的子列表
                             $tree .= '<ul>';
                         } else if ($level < $lastLevel) {
-                            // 结束当前子列表
-                            $tree .= str_repeat('</ul></li>', $lastLevel - $level);
-                        } else if ($level == $lastLevel && $lastLevel != $minLevel - 1) {
-                            // 同级项结束前一项
+                            // 返回上层，关闭当前层级
+                            $tree .= str_repeat('</li></ul>', $lastLevel - $level);
+                            $tree .= '</li>';
+                        } else {
+                            // 同级，关闭上一个项
                             $tree .= '</li>';
                         }
                         
+                        // 添加新项
                         $tree .= '<li><a href="#' . $item['id'] . '">' . 
-                                $item['number'] . ' ' . $item['title'] . '</a>';
+                                $item['number'] . '. ' . $item['title'] . '</a>';
                         
                         $lastLevel = $level;
                     }
                     
                     // 关闭所有剩余的标签
-                    if ($lastLevel > $minLevel - 1) {
-                        $tree .= str_repeat('</li></ul>', $lastLevel - ($minLevel - 1));
-                    }
-                    $tree .= '</ul></div>';
+                    $tree .= str_repeat('</li></ul>', $lastLevel - $minLevel);
+                    $tree .= '</li></ul></div>';
                     
                     debug_print('生成的目录树HTML: ' . htmlspecialchars($tree));
                     return $tree . $content;
