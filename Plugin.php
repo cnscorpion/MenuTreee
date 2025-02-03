@@ -35,7 +35,7 @@ set_exception_handler(function($e) {
  * @version 1.0.0
  * @link https://github.com/cnscorpion/MenuTree
  */
-class MenuTree implements \Typecho_Plugin_Interface
+class MenuTree_Plugin implements Typecho_Plugin_Interface
 {
     /**
      * 激活插件方法,如果激活失败,直接抛出异常
@@ -45,17 +45,15 @@ class MenuTree implements \Typecho_Plugin_Interface
         try {
             debug_print('开始激活插件...');
             
-            \Typecho_Plugin::factory('Widget_Archive')->header = array('MenuTreePlugin\\MenuTree', 'header');
-            debug_print('header钩子注册完成');
+            Typecho_Plugin::factory('Widget_Abstract_Contents')->contentEx = array('MenuTree_Plugin', 'contentEx');
+            Typecho_Plugin::factory('Widget_Archive')->header = array('MenuTree_Plugin', 'header');
             
-            \Typecho_Plugin::factory('Widget_Archive')->contentEx = array('MenuTreePlugin\\MenuTree', 'contentEx');
-            debug_print('contentEx钩子注册完成');
-            
+            debug_print('钩子注册完成');
             return _t('插件启用成功');
-        } catch (\Throwable $e) {
+        } catch (Exception $e) {
             debug_print('激活过程出现错误：' . $e->getMessage());
             debug_print('错误追踪：' . $e->getTraceAsString());
-            throw new \Typecho_Plugin_Exception(_t('插件启用失败: %s', $e->getMessage()));
+            throw new Typecho_Plugin_Exception(_t('插件启用失败: %s', $e->getMessage()));
         }
     }
 
@@ -64,41 +62,25 @@ class MenuTree implements \Typecho_Plugin_Interface
      */
     public static function deactivate()
     {
-        try {
-            debug_print('开始禁用插件...');
-            return _t('插件禁用成功');
-        } catch (\Throwable $e) {
-            debug_print('禁用过程出现错误：' . $e->getMessage());
-            throw new \Typecho_Plugin_Exception(_t('插件禁用失败: %s', $e->getMessage()));
-        }
+        return _t('插件禁用成功');
     }
 
     /**
      * 获取插件配置面板
      *
-     * @param \Typecho_Widget_Helper_Form $form 配置面板
+     * @param Typecho_Widget_Helper_Form $form 配置面板
      */
-    public static function config(\Typecho_Widget_Helper_Form $form)
+    public static function config(Typecho_Widget_Helper_Form $form)
     {
-        try {
-            debug_print('加载配置面板...');
-        } catch (\Throwable $e) {
-            debug_print('配置面板加载错误：' . $e->getMessage());
-        }
     }
 
     /**
      * 个人用户的配置面板
      *
-     * @param \Typecho_Widget_Helper_Form $form
+     * @param Typecho_Widget_Helper_Form $form
      */
-    public static function personalConfig(\Typecho_Widget_Helper_Form $form)
+    public static function personalConfig(Typecho_Widget_Helper_Form $form)
     {
-        try {
-            debug_print('加载个人配置面板...');
-        } catch (\Throwable $e) {
-            debug_print('个人配置面板加载错误：' . $e->getMessage());
-        }
     }
 
     /**
@@ -107,7 +89,6 @@ class MenuTree implements \Typecho_Plugin_Interface
     public static function header()
     {
         try {
-            debug_print('开始输出CSS...');
             echo '<style>
             .menu-tree {
                 position: fixed;
@@ -167,8 +148,7 @@ class MenuTree implements \Typecho_Plugin_Interface
                 }
             }
             </style>';
-            debug_print('CSS输出完成');
-        } catch (\Throwable $e) {
+        } catch (Exception $e) {
             debug_print('CSS输出错误：' . $e->getMessage());
         }
     }
@@ -176,20 +156,14 @@ class MenuTree implements \Typecho_Plugin_Interface
     /**
      * 内容处理
      */
-    public static function contentEx($content, $widget)
+    public static function contentEx($content, $widget, $lastResult)
     {
         try {
-            debug_print('开始处理内容...');
-            debug_print('内容类型: ' . gettype($content));
-            debug_print('Widget类型: ' . get_class($widget));
-            
-            if ($widget instanceof \Widget_Archive && $widget->is('single')) {
+            if ($widget instanceof Widget_Archive && $widget->is('single')) {
                 $matches = array();
                 preg_match_all('/<h([1-6])[^>]*>(.*?)<\/h\1>/i', $content, $matches);
                 
                 if (!empty($matches[0])) {
-                    debug_print('找到' . count($matches[0]) . '个标题');
-                    
                     $tree = '<div class="menu-tree"><h3>目录</h3><ul>';
                     $lastLevel = 0;
                     $counters = array_fill(0, 6, 0);
@@ -238,14 +212,12 @@ class MenuTree implements \Typecho_Plugin_Interface
                     }
                     
                     $tree .= str_repeat('</ul>', $lastLevel) . '</ul></div>';
-                    debug_print('目录生成完成');
                     return $tree . $content;
                 }
             }
             return $content;
-        } catch (\Throwable $e) {
+        } catch (Exception $e) {
             debug_print('内容处理错误：' . $e->getMessage());
-            debug_print('错误追踪：' . $e->getTraceAsString());
             return $content;
         }
     }
