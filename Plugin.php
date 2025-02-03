@@ -245,31 +245,32 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                     const subMenu = item.querySelector("ul");
                     if (subMenu) {
                         item.classList.add("has-children");
-                        const link = item.querySelector("a");
-                        if (link) {
-                            link.addEventListener("click", function(e) {
+                        // 将点击事件添加到整个li元素
+                        item.addEventListener("click", function(e) {
+                            // 阻止事件冒泡，防止触发父级菜单的点击事件
+                            e.stopPropagation();
+                            // 只有当点击的是当前li或其直接子a标签时才触发
+                            if (e.target === this || e.target === this.querySelector("a")) {
                                 e.preventDefault();
-                                e.stopPropagation(); // 防止事件冒泡
-                                item.classList.toggle("expanded");
+                                this.classList.toggle("expanded");
                                 subMenu.classList.toggle("show");
-                            });
-                        }
-                    }
-                });
-
-                // 点击目录项时滚动到对应位置
-                const menuLinks = document.querySelectorAll(".menu-tree a");
-                menuLinks.forEach(link => {
-                    if (!link.parentElement.classList.contains("has-children")) {
-                        link.addEventListener("click", function(e) {
-                            e.preventDefault();
-                            const targetId = this.getAttribute("href").substring(1);
-                            const targetElement = document.getElementById(targetId);
-                            if (targetElement) {
-                                targetElement.scrollIntoView({ behavior: "smooth" });
                             }
                         });
                     }
+                });
+
+                // 点击叶子节点时滚动到对应位置
+                const menuLinks = document.querySelectorAll(".menu-tree li:not(.has-children) > a");
+                menuLinks.forEach(link => {
+                    link.addEventListener("click", function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const targetId = this.getAttribute("href").substring(1);
+                        const targetElement = document.getElementById(targetId);
+                        if (targetElement) {
+                            targetElement.scrollIntoView({ behavior: "smooth" });
+                        }
+                    });
                 });
             });
             </script>';
@@ -301,7 +302,7 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                     // 第一遍循环：构建结构数组
                     for ($i = 0; $i < count($matches[0]); $i++) {
                         $level = (int)$matches[1][$i];
-                        $title = strip_tags($matches[2][$i]);
+                        $title = trim(strip_tags($matches[2][$i]));
                         $id = 'title-' . $i;
                         
                         // 计算编号
@@ -326,10 +327,10 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                             'number' => $number
                         );
                         
-                        // 替换原文中的标题
+                        // 替换原文中的标题，使用 htmlspecialchars_decode 确保正确显示
                         $content = str_replace(
                             $matches[0][$i],
-                            '<h' . $level . ' id="' . $id . '">' . $number . '. ' . $matches[2][$i] . '</h' . $level . '>',
+                            '<h' . $level . ' id="' . $id . '">' . $number . '. ' . htmlspecialchars_decode($matches[2][$i]) . '</h' . $level . '>',
                             $content
                         );
                     }
@@ -348,21 +349,27 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                             $tree .= '</li>';
                         } else {
                             // 同级，关闭上一个项
-                            $tree .= '</li>';
+                            if ($lastLevel != $minLevel) {
+                                $tree .= '</li>';
+                            }
                         }
                         
-                        // 添加新项
+                        // 添加新项，使用 htmlspecialchars_decode 确保正确显示
                         $tree .= '<li><a href="#' . $item['id'] . '">' . 
-                                $item['number'] . '. ' . $item['title'] . '</a>';
+                                $item['number'] . '. ' . htmlspecialchars_decode($item['title']) . '</a>';
                         
                         $lastLevel = $level;
                     }
                     
                     // 关闭所有剩余的标签
-                    $tree .= str_repeat('</li></ul>', $lastLevel - $minLevel);
-                    $tree .= '</li></ul></div>';
+                    if ($lastLevel >= $minLevel) {
+                        $tree .= str_repeat('</li></ul>', $lastLevel - $minLevel);
+                        $tree .= '</li></ul></div>';
+                    } else {
+                        $tree .= '</ul></div>';
+                    }
                     
-                    debug_print('生成的目录树HTML: ' . htmlspecialchars($tree));
+                    debug_print('生成的目录树HTML: ' . $tree);
                     return $tree . $content;
                 }
             }
