@@ -289,54 +289,83 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 preg_match_all('/<h([1-6])[^>]*>(.*?)<\/h\1>/i', $content, $matches);
                 
                 if (!empty($matches[0])) {
-                    $tree = '<div class="menu-tree"><h3>目录</h3><ul>';
-                    $lastLevel = 0;
+                    debug_print('找到标题数量: ' . count($matches[0]));
+                    
+                    // 初始化目录树
+                    $tree = '<div class="menu-tree"><h3>目录</h3>';
+                    $structure = array();
+                    $minLevel = min(array_map('intval', $matches[1]));
+                    $lastLevel = $minLevel - 1;
                     $counters = array_fill(0, 6, 0);
                     
+                    // 第一遍循环：构建结构数组
                     for ($i = 0; $i < count($matches[0]); $i++) {
                         $level = (int)$matches[1][$i];
                         $title = strip_tags($matches[2][$i]);
                         $id = 'title-' . $i;
                         
-                        if ($level === 1) {
-                            $counters[0]++;
-                            $number = $counters[0];
-                            for ($j = 1; $j < 6; $j++) {
+                        // 计算编号
+                        if ($level === $minLevel) {
+                            $counters[$level-1]++;
+                            $number = $counters[$level-1];
+                            for ($j = $level; $j < 6; $j++) {
                                 $counters[$j] = 0;
                             }
                         } else {
-                            $parentLevel = $level - 1;
-                            if ($parentLevel >= 0) {
-                                $counters[$level-1]++;
-                                $number = '';
-                                for ($j = 0; $j < $level; $j++) {
-                                    if ($j === $level - 1) {
-                                        $number .= $counters[$j];
-                                    } else {
-                                        $number .= $counters[$j] . '.';
-                                    }
-                                }
-                                for ($j = $level; $j < 6; $j++) {
-                                    $counters[$j] = 0;
-                                }
+                            $counters[$level-1]++;
+                            $number = '';
+                            for ($j = $minLevel-1; $j < $level; $j++) {
+                                $number .= $counters[$j] . '.';
+                            }
+                            for ($j = $level; $j < 6; $j++) {
+                                $counters[$j] = 0;
                             }
                         }
                         
-                        $content = str_replace($matches[0][$i], 
-                            '<h' . $level . ' id="' . $id . '">' . $number . '. ' . $matches[2][$i] . '</h' . $level . '>', 
-                            $content);
+                        $structure[] = array(
+                            'level' => $level,
+                            'title' => $title,
+                            'id' => $id,
+                            'number' => $number
+                        );
+                        
+                        // 替换原文中的标题
+                        $content = str_replace(
+                            $matches[0][$i],
+                            '<h' . $level . ' id="' . $id . '">' . $number . ' ' . $matches[2][$i] . '</h' . $level . '>',
+                            $content
+                        );
+                    }
+                    
+                    // 第二遍循环：构建HTML
+                    $tree .= '<ul>';
+                    foreach ($structure as $item) {
+                        $level = $item['level'];
                         
                         if ($level > $lastLevel) {
+                            // 开始新的子列表
                             $tree .= '<ul>';
                         } else if ($level < $lastLevel) {
-                            $tree .= str_repeat('</ul>', $lastLevel - $level);
+                            // 结束当前子列表
+                            $tree .= str_repeat('</ul></li>', $lastLevel - $level);
+                        } else if ($level == $lastLevel && $lastLevel != $minLevel - 1) {
+                            // 同级项结束前一项
+                            $tree .= '</li>';
                         }
                         
-                        $tree .= '<li><a href="#' . $id . '">' . $number . '. ' . $title . '</a></li>';
+                        $tree .= '<li><a href="#' . $item['id'] . '">' . 
+                                $item['number'] . ' ' . $item['title'] . '</a>';
+                        
                         $lastLevel = $level;
                     }
                     
-                    $tree .= str_repeat('</ul>', $lastLevel) . '</ul></div>';
+                    // 关闭所有剩余的标签
+                    if ($lastLevel > $minLevel - 1) {
+                        $tree .= str_repeat('</li></ul>', $lastLevel - ($minLevel - 1));
+                    }
+                    $tree .= '</ul></div>';
+                    
+                    debug_print('生成的目录树HTML: ' . htmlspecialchars($tree));
                     return $tree . $content;
                 }
             }
