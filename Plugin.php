@@ -99,8 +99,10 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 font-size: 14px;
                 border: 1px solid var(--classC);
                 box-sizing: border-box;
+                position: sticky;
+                top: 20px;
                 margin-bottom: 15px;
-                position: relative;
+                transition: top .3s;
             }
 
             /* 侧边栏基础样式 */
@@ -116,34 +118,45 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 margin-bottom: 15px;
             }
 
-            /* 其他侧边栏项目样式 */
-            .joe_aside__item {
-                margin-bottom: 15px;
-                background: var(--background);
+            .menu-tree h3 {
+                padding: 0;
+                margin: 0 0 15px 0;
+                color: var(--main);
+                font-size: 16px;
+                font-weight: 500;
+                line-height: 1;
+                text-align: left;
+                position: relative;
+                display: flex;
+                align-items: center;
+                border-bottom: 1px solid var(--classC);
+                padding-bottom: 10px;
             }
 
-            .menu-tree h3 {
-                margin: 0 0 10px 0;
-                padding-bottom: 8px;
-                border-bottom: 1px solid var(--classC);
-                font-size: 16px;
-                color: var(--main);
-                font-weight: 500;
+            .menu-tree h3:before {
+                content: "";
+                width: 4px;
+                height: 16px;
+                background: var(--theme);
+                margin-right: 8px;
+                border-radius: 2px;
             }
 
             .menu-tree ul {
                 list-style: none;
                 padding-left: 0;
                 margin: 0;
-                max-height: 400px;
+                max-height: calc(100vh - 250px);
                 overflow-y: auto;
+                scrollbar-width: thin;
+                scrollbar-color: var(--classC) var(--classD);
             }
 
             .menu-tree ul ul {
-                padding-left: 12px;
+                padding-left: 15px;
                 position: relative;
                 display: block;
-                margin: 2px 0;
+                margin: 3px 0;
             }
 
             .menu-tree ul ul::before {
@@ -152,13 +165,14 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 left: 0;
                 top: 0;
                 bottom: 0;
-                width: 1px;
+                width: 2px;
                 background: var(--classC);
+                opacity: 0.5;
             }
 
             .menu-tree li {
-                margin: 1px 0;
-                line-height: 1.4;
+                margin: 3px 0;
+                line-height: 1.6;
                 position: relative;
             }
 
@@ -167,21 +181,22 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
             }
 
             .menu-tree a {
-                color: var(--main);
+                color: var(--routine);
                 text-decoration: none;
                 transition: all 0.2s;
                 display: block;
-                padding: 3px 6px;
+                padding: 4px 8px;
                 border-radius: 4px;
                 font-weight: normal;
                 position: relative;
                 font-size: 13px;
+                line-height: 1.4;
             }
 
             .menu-tree a:hover {
                 color: var(--theme);
-                background: var(--classC);
-                padding-left: 8px;
+                background: var(--background);
+                padding-left: 12px;
             }
 
             /* 添加滚动条样式 */
@@ -196,6 +211,17 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
 
             .menu-tree ul::-webkit-scrollbar-track {
                 background: var(--classD);
+            }
+
+            @media screen and (max-width: 768px) {
+                .menu-tree {
+                    position: relative;
+                    top: 0;
+                    margin: 15px 0;
+                }
+                .menu-tree ul {
+                    max-height: 300px;
+                }
             }
             </style>
             <script>
@@ -224,6 +250,34 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                             });
                         }
                     };
+                });
+
+                // 监听滚动，高亮当前阅读的标题
+                let ticking = false;
+                const headings = document.querySelectorAll("h1, h2, h3, h4, h5, h6");
+                const menuLinks = menuTree.querySelectorAll("a");
+
+                window.addEventListener("scroll", function() {
+                    if (!ticking) {
+                        window.requestAnimationFrame(function() {
+                            let current = "";
+                            headings.forEach(heading => {
+                                const rect = heading.getBoundingClientRect();
+                                if (rect.top <= 100) {
+                                    current = heading.id;
+                                }
+                            });
+
+                            menuLinks.forEach(link => {
+                                link.classList.remove("active");
+                                if (link.getAttribute("href") === "#" + current) {
+                                    link.classList.add("active");
+                                }
+                            });
+                            ticking = false;
+                        });
+                        ticking = true;
+                    }
                 });
             });
             </script>';
