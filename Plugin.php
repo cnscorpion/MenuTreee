@@ -94,12 +94,26 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
             .menu-tree {
                 width: 100%;
                 background: var(--background);
-                padding: 15px;
-                border-radius: 8px;
-                font-size: 13px;
-                margin: 15px 0;
+                padding: var(--padding-15);
+                border-radius: var(--radius-8);
+                font-size: 14px;
+                margin-bottom: 15px;
                 border: 1px solid var(--classC);
                 box-sizing: border-box;
+            }
+
+            /* 确保目录树和其他侧边栏项目宽度一致 */
+            .joe_aside__item .menu-tree {
+                width: 100%;
+                margin: 0;
+            }
+
+            /* 侧边栏滚动效果 */
+            .joe_aside {
+                position: sticky !important;
+                top: var(--padding-20);
+                transition: top 0.3s;
+                will-change: top;
             }
 
             .menu-tree h3 {
@@ -177,12 +191,6 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
             .menu-tree ul::-webkit-scrollbar-track {
                 background: var(--classD);
             }
-
-            /* 处理固定定位冲突 */
-            .joe_aside__item.flatterer {
-                position: relative !important;
-                top: 0 !important;
-            }
             </style>
             <script>
             document.addEventListener("DOMContentLoaded", function() {
@@ -210,6 +218,23 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                             });
                         }
                     };
+                });
+
+                // 处理滚动效果
+                let lastScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                window.addEventListener("scroll", () => {
+                    const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                    const aside = document.querySelector(".joe_aside");
+                    if (aside) {
+                        if (currentScrollTop > lastScrollTop) {
+                            // 向下滚动
+                            aside.style.top = "20px";
+                        } else {
+                            // 向上滚动
+                            aside.style.top = "20px";
+                        }
+                    }
+                    lastScrollTop = currentScrollTop;
                 });
             });
             </script>';
