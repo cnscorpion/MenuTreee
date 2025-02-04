@@ -97,7 +97,6 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 padding: var(--padding-15);
                 border-radius: var(--radius-8);
                 font-size: 14px;
-                margin-bottom: 15px;
                 border: 1px solid var(--classC);
                 box-sizing: border-box;
             }
@@ -110,10 +109,17 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
 
             /* 侧边栏滚动效果 */
             .joe_aside {
-                position: sticky !important;
+                position: relative;
+            }
+
+            .joe_aside__item.author {
+                position: relative;
+                margin-bottom: 15px;
+            }
+
+            .joe_aside .sticky-wrapper {
+                position: sticky;
                 top: var(--padding-20);
-                transition: top 0.3s;
-                will-change: top;
             }
 
             .menu-tree h3 {
@@ -200,7 +206,24 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 // 将目录树移动到作者信息下方
                 const authorSection = document.querySelector(".joe_aside__item.author");
                 if (authorSection) {
-                    authorSection.parentNode.insertBefore(menuTree, authorSection.nextSibling);
+                    // 创建一个包裹元素
+                    const stickyWrapper = document.createElement("div");
+                    stickyWrapper.className = "sticky-wrapper";
+                    authorSection.parentNode.insertBefore(stickyWrapper, authorSection.nextSibling);
+
+                    // 将目录树和其他需要固定的元素移动到包裹元素中
+                    const aside = document.querySelector(".joe_aside");
+                    if (aside) {
+                        Array.from(aside.children).forEach(child => {
+                            if (!child.classList.contains("joe_aside__item") || 
+                                !child.classList.contains("author")) {
+                                if (child !== authorSection && child !== stickyWrapper) {
+                                    stickyWrapper.appendChild(child);
+                                }
+                            }
+                        });
+                        stickyWrapper.appendChild(menuTree);
+                    }
                 }
 
                 // 点击叶子节点时滚动到对应位置
@@ -218,23 +241,6 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                             });
                         }
                     };
-                });
-
-                // 处理滚动效果
-                let lastScrollTop = window.pageYOffset || document.documentElement.scrollTop;
-                window.addEventListener("scroll", () => {
-                    const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
-                    const aside = document.querySelector(".joe_aside");
-                    if (aside) {
-                        if (currentScrollTop > lastScrollTop) {
-                            // 向下滚动
-                            aside.style.top = "20px";
-                        } else {
-                            // 向上滚动
-                            aside.style.top = "20px";
-                        }
-                    }
-                    lastScrollTop = currentScrollTop;
                 });
             });
             </script>';
