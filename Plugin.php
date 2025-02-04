@@ -245,15 +245,22 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 const authorSection = document.querySelector(".joe_aside__item.author");
                 
                 if (aside && authorSection) {
-                    // 将作者信息后面的所有元素移动到粘性容器中
+                    // 先将目录树移到作者信息后面
+                    authorSection.after(menuTree);
+
+                    // 创建一个新的容器来包装除作者信息和目录树之外的其他元素
+                    const otherElementsWrapper = document.createElement("div");
+                    otherElementsWrapper.className = "sticky-sidebar";
+
+                    // 将除作者信息和目录树之外的元素移动到新容器中
                     Array.from(aside.children).forEach(child => {
-                        if (child !== authorSection) {
-                            stickyWrapper.appendChild(child);
+                        if (child !== authorSection && child !== menuTree) {
+                            otherElementsWrapper.appendChild(child);
                         }
                     });
 
-                    // 将粘性容器插入到作者信息后面
-                    authorSection.after(stickyWrapper);
+                    // 将新容器插入到目录树后面
+                    menuTree.after(otherElementsWrapper);
                 }
 
                 // 点击叶子节点时滚动到对应位置
