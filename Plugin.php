@@ -445,8 +445,8 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                         $tree .= '</ul></div>';
                     }
                     
-                    // 在作者信息后插入目录
-                    $pattern = '/<div class="post-author">.*?<\/div>/is';
+                    // 在.joe_aside__item.author后插入目录
+                    $pattern = '/<div class="joe_aside__item author".*?<\/div>/is';
                     if (preg_match($pattern, $content, $authorMatch)) {
                         $content = str_replace($authorMatch[0], $authorMatch[0] . $tree, $content);
                     } else {
