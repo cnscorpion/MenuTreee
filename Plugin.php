@@ -456,13 +456,7 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                     }
                     
                     debug_print('生成的目录树HTML: ' . $tree);
-                    
-                    // 在作者信息后插入目录树
-                    $pattern = '/<section class="joe_aside__item author">/';
-                    if (preg_match($pattern, $content)) {
-                        $content = preg_replace($pattern, '<section class="joe_aside__item author">' . $tree, $content);
-                    }
-                    return $content;
+                    return $tree . $content;
                 }
             }
             return $content;
