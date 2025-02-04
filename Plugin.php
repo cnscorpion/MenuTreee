@@ -46,9 +46,9 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
         try {
             debug_print('开始激活插件...');
             
-            // 修改钩子顺序，先处理内容，再输出头部
-            Typecho_Plugin::factory('Widget_Archive')->header = array('MenuTree_Plugin', 'header');
+            // 先注册内容处理钩子，再注册头部钩子
             Typecho_Plugin::factory('Widget_Abstract_Contents')->contentEx = array('MenuTree_Plugin', 'contentEx');
+            Typecho_Plugin::factory('Widget_Archive')->header = array('MenuTree_Plugin', 'header');
             
             debug_print('钩子注册完成');
             return _t('插件启用成功');
@@ -91,163 +91,167 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
     public static function header()
     {
         try {
-            echo '<style>
-            .menu-tree {
-                width: 100%;
-                background: var(--background);
-                padding: var(--padding-15);
-                border-radius: var(--radius-8);
-                font-size: 14px;
-                border: 1px solid var(--classC);
-                box-sizing: border-box;
-                margin-bottom: 15px;
-            }
+            // 只在文章页面输出目录相关的样式和脚本
+            if (isset($GLOBALS['isArticlePage']) && $GLOBALS['isArticlePage']) {
+                echo '<style>
+                .menu-tree {
+                    width: 100%;
+                    background: var(--background);
+                    padding: var(--padding-15);
+                    border-radius: var(--radius-8);
+                    font-size: 14px;
+                    border: 1px solid var(--classC);
+                    box-sizing: border-box;
+                    margin-bottom: 15px;
+                }
 
-            /* 侧边栏基础样式 */
-            .joe_aside {
-                position: relative;
-            }
-
-            /* 作者信息样式 */
-            .joe_aside__item.author {
-                position: relative;
-                background: var(--background);
-                margin-bottom: 15px;
-            }
-
-            /* 创建一个包裹容器用于固定定位 */
-            .sticky-wrapper {
-                position: sticky;
-                top: 20px;
-                transition: top 0.3s;
-            }
-
-            .menu-tree h3 {
-                padding: 0;
-                margin: 0 0 15px 0;
-                color: var(--main);
-                font-size: 16px;
-                font-weight: 500;
-                line-height: 1;
-                text-align: left;
-                position: relative;
-                display: flex;
-                align-items: center;
-                border-bottom: 1px solid var(--classC);
-                padding-bottom: 10px;
-            }
-
-            .menu-tree h3:before {
-                content: "";
-                width: 4px;
-                height: 16px;
-                background: var(--theme);
-                margin-right: 8px;
-                border-radius: 2px;
-            }
-
-            .menu-tree ul {
-                list-style: none;
-                padding-left: 0;
-                margin: 0;
-                max-height: calc(100vh - 250px);
-                overflow-y: auto;
-                scrollbar-width: thin;
-                scrollbar-color: var(--classC) var(--classD);
-            }
-
-            .menu-tree ul ul {
-                padding-left: 15px;
-                position: relative;
-                display: block;
-                margin: 3px 0;
-            }
-
-            .menu-tree ul ul::before {
-                content: "";
-                position: absolute;
-                left: 0;
-                top: 0;
-                bottom: 0;
-                width: 2px;
-                background: var(--classC);
-                opacity: 0.5;
-            }
-
-            .menu-tree li {
-                margin: 3px 0;
-                line-height: 1.6;
-                position: relative;
-            }
-
-            .menu-tree li::before {
-                display: none;
-            }
-
-            .menu-tree a {
-                color: var(--routine);
-                text-decoration: none;
-                transition: all 0.2s;
-                display: block;
-                padding: 4px 8px;
-                border-radius: 4px;
-                font-weight: normal;
-                position: relative;
-                font-size: 13px;
-                line-height: 1.4;
-            }
-
-            .menu-tree a:hover {
-                color: var(--theme);
-                background: var(--background);
-                padding-left: 12px;
-            }
-
-            .menu-tree a.active {
-                color: var(--theme);
-                background: var(--classC);
-                padding-left: 12px;
-            }
-
-            /* 添加滚动条样式 */
-            .menu-tree ul::-webkit-scrollbar {
-                width: 4px;
-            }
-
-            .menu-tree ul::-webkit-scrollbar-thumb {
-                background: var(--classC);
-                border-radius: 2px;
-            }
-
-            .menu-tree ul::-webkit-scrollbar-track {
-                background: var(--classD);
-            }
-
-            @media screen and (max-width: 768px) {
-                .menu-tree-wrapper {
+                /* 侧边栏基础样式 */
+                .joe_aside {
                     position: relative;
-                    top: 0;
                 }
-                .menu-tree ul {
-                    max-height: 300px;
-                }
-            }
-            </style>';
 
-            if (isset($GLOBALS['menuTree'])) {
-                echo '<script>
-                document.addEventListener("DOMContentLoaded", function() {
-                    function initMenuTree() {
+                /* 作者信息样式 */
+                .joe_aside__item.author {
+                    position: relative;
+                    background: var(--background);
+                    margin-bottom: 15px;
+                }
+
+                /* 创建一个包裹容器用于固定定位 */
+                .sticky-wrapper {
+                    position: sticky;
+                    top: 20px;
+                    transition: top 0.3s;
+                }
+
+                .menu-tree h3 {
+                    padding: 0;
+                    margin: 0 0 15px 0;
+                    color: var(--main);
+                    font-size: 16px;
+                    font-weight: 500;
+                    line-height: 1;
+                    text-align: left;
+                    position: relative;
+                    display: flex;
+                    align-items: center;
+                    border-bottom: 1px solid var(--classC);
+                    padding-bottom: 10px;
+                }
+
+                .menu-tree h3:before {
+                    content: "";
+                    width: 4px;
+                    height: 16px;
+                    background: var(--theme);
+                    margin-right: 8px;
+                    border-radius: 2px;
+                }
+
+                .menu-tree ul {
+                    list-style: none;
+                    padding-left: 0;
+                    margin: 0;
+                    max-height: calc(100vh - 250px);
+                    overflow-y: auto;
+                    scrollbar-width: thin;
+                    scrollbar-color: var(--classC) var(--classD);
+                }
+
+                .menu-tree ul ul {
+                    padding-left: 15px;
+                    position: relative;
+                    display: block;
+                    margin: 3px 0;
+                }
+
+                .menu-tree ul ul::before {
+                    content: "";
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    bottom: 0;
+                    width: 2px;
+                    background: var(--classC);
+                    opacity: 0.5;
+                }
+
+                .menu-tree li {
+                    margin: 3px 0;
+                    line-height: 1.6;
+                    position: relative;
+                }
+
+                .menu-tree li::before {
+                    display: none;
+                }
+
+                .menu-tree a {
+                    color: var(--routine);
+                    text-decoration: none;
+                    transition: all 0.2s;
+                    display: block;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    font-weight: normal;
+                    position: relative;
+                    font-size: 13px;
+                    line-height: 1.4;
+                }
+
+                .menu-tree a:hover {
+                    color: var(--theme);
+                    background: var(--background);
+                    padding-left: 12px;
+                }
+
+                .menu-tree a.active {
+                    color: var(--theme);
+                    background: var(--classC);
+                    padding-left: 12px;
+                }
+
+                /* 添加滚动条样式 */
+                .menu-tree ul::-webkit-scrollbar {
+                    width: 4px;
+                }
+
+                .menu-tree ul::-webkit-scrollbar-thumb {
+                    background: var(--classC);
+                    border-radius: 2px;
+                }
+
+                .menu-tree ul::-webkit-scrollbar-track {
+                    background: var(--classD);
+                }
+
+                @media screen and (max-width: 768px) {
+                    .menu-tree-wrapper {
+                        position: relative;
+                        top: 0;
+                    }
+                    .menu-tree ul {
+                        max-height: 300px;
+                    }
+                }
+                </style>';
+
+                if (isset($GLOBALS['menuTree'])) {
+                    echo '<script>
+                    document.addEventListener("DOMContentLoaded", function() {
+                        const menuTreeHtml = ' . json_encode($GLOBALS['menuTree']) . ';
                         const aside = document.querySelector(".joe_aside");
                         const authorSection = document.querySelector(".joe_aside__item.author");
                         
-                        if (aside && authorSection) {
+                        if (aside && authorSection && menuTreeHtml) {
                             // 创建粘性容器
                             const stickyWrapper = document.createElement("div");
                             stickyWrapper.className = "sticky-wrapper";
                             
-                            // 直接插入目录树HTML
-                            stickyWrapper.innerHTML = ' . json_encode($GLOBALS['menuTree']) . ';
+                            // 插入目录树
+                            const menuTreeDiv = document.createElement("div");
+                            menuTreeDiv.innerHTML = menuTreeHtml;
+                            stickyWrapper.appendChild(menuTreeDiv.firstChild);
                             
                             // 将作者信息后面的所有元素移动到粘性容器中
                             let nextElement = authorSection.nextElementSibling;
@@ -308,16 +312,9 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                                 });
                             }
                         }
-                    }
-                    
-                    // 确保DOM加载完成后初始化
-                    if (document.readyState === "loading") {
-                        document.addEventListener("DOMContentLoaded", initMenuTree);
-                    } else {
-                        initMenuTree();
-                    }
-                });
-                </script>';
+                    });
+                    </script>';
+                }
             }
         } catch (Exception $e) {
             debug_print('CSS输出错误：' . $e->getMessage());
@@ -409,8 +406,8 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                     // 将目录树保存到全局变量中
                     $GLOBALS['menuTree'] = $tree;
                     
-                    // 只返回处理后的内容，不包含目录树
-                    return $content;
+                    // 添加一个标记，表示这是文章页面
+                    $GLOBALS['isArticlePage'] = true;
                 }
             }
             return $content;
