@@ -100,14 +100,15 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 border: 1px solid var(--classC);
                 box-sizing: border-box;
                 margin-bottom: 15px;
-                position: relative; /* 确保目录树跟随正常文档流 */
+                position: relative;
             }
 
-            /* 侧边栏滚动效果 */
+            /* 侧边栏基础样式 */
             .joe_aside {
                 position: relative;
             }
 
+            /* 作者信息样式 */
             .joe_aside__item.author {
                 position: relative;
                 z-index: 2;
@@ -115,24 +116,10 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 margin-bottom: 15px;
             }
 
-            /* 固定除了 author 和 menu-tree 外的所有元素 */
-            .joe_aside__item:not(.author):not(.menu-tree) {
-                position: fixed;
-                right: var(--main-right);
-                width: var(--aside-width);
+            /* 其他侧边栏项目样式 */
+            .joe_aside__item {
+                margin-bottom: 15px;
                 background: var(--background);
-                z-index: 1;
-            }
-
-            /* 设置各个固定元素的位置 */
-            .joe_aside__item.timeline {
-                top: 95px;
-            }
-            .joe_aside__item.hot {
-                top: 290px;
-            }
-            .joe_aside__item.tags {
-                top: 485px;
             }
 
             .menu-tree h3 {
