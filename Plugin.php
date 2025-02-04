@@ -46,7 +46,6 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
         try {
             debug_print('开始激活插件...');
             
-            // 先注册内容处理钩子，再注册头部钩子
             Typecho_Plugin::factory('Widget_Abstract_Contents')->contentEx = array('MenuTree_Plugin', 'contentEx');
             Typecho_Plugin::factory('Widget_Archive')->header = array('MenuTree_Plugin', 'header');
             
@@ -91,231 +90,138 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
     public static function header()
     {
         try {
-            // 只在文章页面输出目录相关的样式和脚本
-            if (isset($GLOBALS['isArticlePage']) && $GLOBALS['isArticlePage']) {
-                echo '<style>
+            echo '<style>
+            .menu-tree {
+                position: fixed;
+                top: 100px;
+                right: 30px;
+                width: 280px;
+                max-height: calc(100vh - 180px);
+                overflow-y: auto;
+                background: #ffffff;
+                padding: 12px;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+                font-size: 13px;
+                z-index: 1000;
+                transition: all 0.3s ease;
+                border: 1px solid rgba(0, 0, 0, 0.05);
+            }
+
+            .menu-tree h3 {
+                margin: 0 0 10px 0;
+                padding-bottom: 8px;
+                border-bottom: 1px solid #f0f0f0;
+                font-size: 16px;
+                color: #2c3e50;
+                font-weight: 600;
+            }
+
+            .menu-tree ul {
+                list-style: none;
+                padding-left: 0;
+                margin: 0;
+            }
+
+            .menu-tree ul ul {
+                padding-left: 12px;
+                position: relative;
+                display: block;
+                margin: 2px 0;
+            }
+
+            .menu-tree ul ul::before {
+                content: "";
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 1px;
+                background: #f0f0f0;
+            }
+
+            .menu-tree li {
+                margin: 1px 0;
+                line-height: 1.4;
+                position: relative;
+            }
+
+            .menu-tree li::before {
+                display: none;
+            }
+
+            .menu-tree a {
+                color: #666;
+                text-decoration: none;
+                transition: all 0.2s;
+                display: block;
+                padding: 3px 6px;
+                border-radius: 4px;
+                font-weight: normal;
+                position: relative;
+                font-size: 13px;
+            }
+
+            .menu-tree a:hover {
+                color: #3498db;
+                background: rgba(52, 152, 219, 0.05);
+                padding-left: 8px;
+            }
+
+            @media screen and (max-width: 1400px) {
                 .menu-tree {
+                    width: 250px;
+                }
+            }
+
+            @media screen and (max-width: 1200px) {
+                .menu-tree {
+                    position: relative;
+                    top: 0;
+                    right: 0;
                     width: 100%;
-                    background: var(--background);
-                    padding: var(--padding-15);
-                    border-radius: var(--radius-8);
-                    font-size: 14px;
-                    border: 1px solid var(--classC);
-                    box-sizing: border-box;
-                    margin-bottom: 15px;
-                }
-
-                /* 侧边栏基础样式 */
-                .joe_aside {
-                    position: relative;
-                }
-
-                /* 作者信息样式 */
-                .joe_aside__item.author {
-                    position: relative;
-                    background: var(--background);
-                    margin-bottom: 15px;
-                }
-
-                /* 创建一个包裹容器用于固定定位 */
-                .sticky-wrapper {
-                    position: sticky;
-                    top: 20px;
-                    transition: top 0.3s;
+                    max-height: none;
+                    margin: 0 0 20px 0;
+                    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+                    padding: 10px;
                 }
 
                 .menu-tree h3 {
-                    padding: 0;
-                    margin: 0 0 15px 0;
-                    color: var(--main);
-                    font-size: 16px;
-                    font-weight: 500;
-                    line-height: 1;
-                    text-align: left;
-                    position: relative;
-                    display: flex;
-                    align-items: center;
-                    border-bottom: 1px solid var(--classC);
-                    padding-bottom: 10px;
-                }
-
-                .menu-tree h3:before {
-                    content: "";
-                    width: 4px;
-                    height: 16px;
-                    background: var(--theme);
-                    margin-right: 8px;
-                    border-radius: 2px;
-                }
-
-                .menu-tree ul {
-                    list-style: none;
-                    padding-left: 0;
-                    margin: 0;
-                    max-height: calc(100vh - 250px);
-                    overflow-y: auto;
-                    scrollbar-width: thin;
-                    scrollbar-color: var(--classC) var(--classD);
+                    margin-bottom: 8px;
                 }
 
                 .menu-tree ul ul {
-                    padding-left: 15px;
-                    position: relative;
-                    display: block;
-                    margin: 3px 0;
-                }
-
-                .menu-tree ul ul::before {
-                    content: "";
-                    position: absolute;
-                    left: 0;
-                    top: 0;
-                    bottom: 0;
-                    width: 2px;
-                    background: var(--classC);
-                    opacity: 0.5;
+                    padding-left: 12px;
                 }
 
                 .menu-tree li {
-                    margin: 3px 0;
-                    line-height: 1.6;
-                    position: relative;
-                }
-
-                .menu-tree li::before {
-                    display: none;
+                    margin: 1px 0;
                 }
 
                 .menu-tree a {
-                    color: var(--routine);
-                    text-decoration: none;
-                    transition: all 0.2s;
-                    display: block;
-                    padding: 4px 8px;
-                    border-radius: 4px;
-                    font-weight: normal;
-                    position: relative;
-                    font-size: 13px;
-                    line-height: 1.4;
-                }
-
-                .menu-tree a:hover {
-                    color: var(--theme);
-                    background: var(--background);
-                    padding-left: 12px;
-                }
-
-                .menu-tree a.active {
-                    color: var(--theme);
-                    background: var(--classC);
-                    padding-left: 12px;
-                }
-
-                /* 添加滚动条样式 */
-                .menu-tree ul::-webkit-scrollbar {
-                    width: 4px;
-                }
-
-                .menu-tree ul::-webkit-scrollbar-thumb {
-                    background: var(--classC);
-                    border-radius: 2px;
-                }
-
-                .menu-tree ul::-webkit-scrollbar-track {
-                    background: var(--classD);
-                }
-
-                @media screen and (max-width: 768px) {
-                    .menu-tree-wrapper {
-                        position: relative;
-                        top: 0;
-                    }
-                    .menu-tree ul {
-                        max-height: 300px;
-                    }
-                }
-                </style>';
-
-                if (isset($GLOBALS['menuTree'])) {
-                    echo '<script>
-                    document.addEventListener("DOMContentLoaded", function() {
-                        const menuTreeHtml = ' . json_encode($GLOBALS['menuTree']) . ';
-                        const aside = document.querySelector(".joe_aside");
-                        const authorSection = document.querySelector(".joe_aside__item.author");
-                        
-                        if (aside && authorSection && menuTreeHtml) {
-                            // 创建粘性容器
-                            const stickyWrapper = document.createElement("div");
-                            stickyWrapper.className = "sticky-wrapper";
-                            
-                            // 插入目录树
-                            const menuTreeDiv = document.createElement("div");
-                            menuTreeDiv.innerHTML = menuTreeHtml;
-                            stickyWrapper.appendChild(menuTreeDiv.firstChild);
-                            
-                            // 将作者信息后面的所有元素移动到粘性容器中
-                            let nextElement = authorSection.nextElementSibling;
-                            while (nextElement) {
-                                const currentElement = nextElement;
-                                nextElement = nextElement.nextElementSibling;
-                                stickyWrapper.appendChild(currentElement);
-                            }
-                            
-                            // 将粘性容器添加到作者信息后面
-                            authorSection.after(stickyWrapper);
-                            
-                            // 设置滚动监听
-                            const menuTree = stickyWrapper.querySelector(".menu-tree");
-                            if (menuTree) {
-                                const headings = document.querySelectorAll(".joe_detail__article h1, .joe_detail__article h2, .joe_detail__article h3, .joe_detail__article h4, .joe_detail__article h5, .joe_detail__article h6");
-                                const menuLinks = menuTree.querySelectorAll("a");
-                                
-                                // 点击目录项时滚动到对应位置
-                                menuLinks.forEach(link => {
-                                    link.onclick = function(e) {
-                                        e.preventDefault();
-                                        const targetId = this.getAttribute("href").substring(1);
-                                        const targetElement = document.getElementById(targetId);
-                                        if (targetElement) {
-                                            const offset = targetElement.offsetTop - 20;
-                                            window.scrollTo({
-                                                top: offset,
-                                                behavior: "smooth"
-                                            });
-                                        }
-                                    };
-                                });
-                                
-                                // 监听滚动，高亮当前阅读的标题
-                                let ticking = false;
-                                window.addEventListener("scroll", function() {
-                                    if (!ticking) {
-                                        window.requestAnimationFrame(function() {
-                                            let current = "";
-                                            headings.forEach(heading => {
-                                                const rect = heading.getBoundingClientRect();
-                                                if (rect.top <= 100) {
-                                                    current = heading.id;
-                                                }
-                                            });
-                                            
-                                            menuLinks.forEach(link => {
-                                                link.classList.remove("active");
-                                                if (link.getAttribute("href") === "#" + current) {
-                                                    link.classList.add("active");
-                                                }
-                                            });
-                                            ticking = false;
-                                        });
-                                        ticking = true;
-                                    }
-                                });
-                            }
-                        }
-                    });
-                    </script>';
+                    padding: 2px 6px;
                 }
             }
+            </style>
+            <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                const menuTree = document.querySelector(".menu-tree");
+                if (!menuTree) return;
+
+                // 点击叶子节点时滚动到对应位置
+                menuTree.querySelectorAll("a").forEach(link => {
+                    link.onclick = function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const targetId = this.getAttribute("href").substring(1);
+                        const targetElement = document.getElementById(targetId);
+                        if (targetElement) {
+                            targetElement.scrollIntoView({ behavior: "smooth" });
+                        }
+                    };
+                });
+            });
+            </script>';
         } catch (Exception $e) {
             debug_print('CSS输出错误：' . $e->getMessage());
         }
@@ -332,7 +238,9 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 preg_match_all('/<h([1-6])[^>]*>(.*?)<\/h\1>/i', $content, $matches);
                 
                 if (!empty($matches[0])) {
-                    // 初始化目录树，但不直接添加到内容中
+                    debug_print('找到标题数量: ' . count($matches[0]));
+                    
+                    // 初始化目录树
                     $tree = '<div class="menu-tree"><h3>目录</h3><ul>';
                     $structure = array();
                     $minLevel = min(array_map('intval', $matches[1]));
@@ -367,7 +275,7 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                             'number' => $number
                         );
                         
-                        // 替换原文中的标题，添加id
+                        // 替换原文中的标题，使用 htmlspecialchars_decode 确保正确显示
                         $content = str_replace(
                             $matches[0][$i],
                             '<h' . $level . ' id="' . $id . '">' . $number . '. ' . htmlspecialchars_decode($matches[2][$i]) . '</h' . $level . '>',
@@ -379,23 +287,29 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                     foreach ($structure as $item) {
                         $level = $item['level'];
                         
+                        // 处理层级变化
                         if ($level > $lastLevel) {
+                            // 进入更深层级，开始新的子列表
                             $tree .= '<ul>';
                         } else if ($level < $lastLevel) {
+                            // 返回上层，关闭当前层级
                             $tree .= str_repeat('</li></ul>', $lastLevel - $level);
                             $tree .= '</li>';
                         } else {
+                            // 同级，关闭上一个项
                             if ($lastLevel != $minLevel) {
                                 $tree .= '</li>';
                             }
                         }
                         
+                        // 添加新项，使用 htmlspecialchars_decode 确保正确显示
                         $tree .= '<li><a href="#' . $item['id'] . '">' . 
                                 $item['number'] . '. ' . htmlspecialchars_decode($item['title']) . '</a>';
                         
                         $lastLevel = $level;
                     }
                     
+                    // 关闭所有剩余的标签
                     if ($lastLevel >= $minLevel) {
                         $tree .= str_repeat('</li></ul>', $lastLevel - $minLevel);
                         $tree .= '</li></ul></div>';
@@ -403,11 +317,8 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                         $tree .= '</ul></div>';
                     }
                     
-                    // 将目录树保存到全局变量中
-                    $GLOBALS['menuTree'] = $tree;
-                    
-                    // 添加一个标记，表示这是文章页面
-                    $GLOBALS['isArticlePage'] = true;
+                    debug_print('生成的目录树HTML: ' . $tree);
+                    return $tree . $content;
                 }
             }
             return $content;
