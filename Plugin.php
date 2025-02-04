@@ -234,9 +234,6 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
             </style>
             <script>
             document.addEventListener("DOMContentLoaded", function() {
-                const menuTree = document.querySelector(".menu-tree");
-                if (!menuTree) return;
-
                 // 获取作者信息和侧边栏
                 const aside = document.querySelector(".joe_aside");
                 const authorSection = document.querySelector(".joe_aside__item.author");
@@ -245,6 +242,12 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                     // 创建粘性容器
                     const stickyWrapper = document.createElement("div");
                     stickyWrapper.className = "sticky-wrapper";
+
+                    // 将目录树插入到粘性容器中
+                    const menuTreeHtml = ' . json_encode($GLOBALS['menuTree'] ?? '') . ';
+                    if (menuTreeHtml) {
+                        stickyWrapper.innerHTML = menuTreeHtml;
+                    }
 
                     // 将作者信息后面的所有元素移动到粘性容器中
                     let nextElement = authorSection.nextElementSibling;
@@ -256,52 +259,55 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
 
                     // 将粘性容器添加到作者信息后面
                     authorSection.after(stickyWrapper);
-                }
 
-                // 点击叶子节点时滚动到对应位置
-                menuTree.querySelectorAll("a").forEach(link => {
-                    link.onclick = function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        const targetId = this.getAttribute("href").substring(1);
-                        const targetElement = document.getElementById(targetId);
-                        if (targetElement) {
-                            const offset = targetElement.offsetTop - 20;
-                            window.scrollTo({
-                                top: offset,
-                                behavior: "smooth"
-                            });
-                        }
-                    };
-                });
+                    // 监听滚动，高亮当前阅读的标题
+                    const menuTree = stickyWrapper.querySelector(".menu-tree");
+                    if (menuTree) {
+                        let ticking = false;
+                        const headings = document.querySelectorAll(".joe_detail__article h1, .joe_detail__article h2, .joe_detail__article h3, .joe_detail__article h4, .joe_detail__article h5, .joe_detail__article h6");
+                        const menuLinks = menuTree.querySelectorAll("a");
 
-                // 监听滚动，高亮当前阅读的标题
-                let ticking = false;
-                const headings = document.querySelectorAll(".joe_detail__article h1, .joe_detail__article h2, .joe_detail__article h3, .joe_detail__article h4, .joe_detail__article h5, .joe_detail__article h6");
-                const menuLinks = menuTree.querySelectorAll("a");
+                        window.addEventListener("scroll", function() {
+                            if (!ticking) {
+                                window.requestAnimationFrame(function() {
+                                    let current = "";
+                                    headings.forEach(heading => {
+                                        const rect = heading.getBoundingClientRect();
+                                        if (rect.top <= 100) {
+                                            current = heading.id;
+                                        }
+                                    });
 
-                window.addEventListener("scroll", function() {
-                    if (!ticking) {
-                        window.requestAnimationFrame(function() {
-                            let current = "";
-                            headings.forEach(heading => {
-                                const rect = heading.getBoundingClientRect();
-                                if (rect.top <= 100) {
-                                    current = heading.id;
-                                }
-                            });
-
-                            menuLinks.forEach(link => {
-                                link.classList.remove("active");
-                                if (link.getAttribute("href") === "#" + current) {
-                                    link.classList.add("active");
-                                }
-                            });
-                            ticking = false;
+                                    menuLinks.forEach(link => {
+                                        link.classList.remove("active");
+                                        if (link.getAttribute("href") === "#" + current) {
+                                            link.classList.add("active");
+                                        }
+                                    });
+                                    ticking = false;
+                                });
+                                ticking = true;
+                            }
                         });
-                        ticking = true;
+
+                        // 点击目录项时滚动到对应位置
+                        menuLinks.forEach(link => {
+                            link.onclick = function(e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                const targetId = this.getAttribute("href").substring(1);
+                                const targetElement = document.getElementById(targetId);
+                                if (targetElement) {
+                                    const offset = targetElement.offsetTop - 20;
+                                    window.scrollTo({
+                                        top: offset,
+                                        behavior: "smooth"
+                                    });
+                                }
+                            };
+                        });
                     }
-                });
+                }
             });
             </script>';
         } catch (Exception $e) {
@@ -320,9 +326,7 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 preg_match_all('/<h([1-6])[^>]*>(.*?)<\/h\1>/i', $content, $matches);
                 
                 if (!empty($matches[0])) {
-                    debug_print('找到标题数量: ' . count($matches[0]));
-                    
-                    // 初始化目录树
+                    // 初始化目录树，但不直接添加到内容中
                     $tree = '<div class="menu-tree"><h3>目录</h3><ul>';
                     $structure = array();
                     $minLevel = min(array_map('intval', $matches[1]));
@@ -369,7 +373,6 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                     foreach ($structure as $item) {
                         $level = $item['level'];
                         
-                        // 处理层级变化
                         if ($level > $lastLevel) {
                             $tree .= '<ul>';
                         } else if ($level < $lastLevel) {
@@ -381,14 +384,12 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                             }
                         }
                         
-                        // 添加新项
                         $tree .= '<li><a href="#' . $item['id'] . '">' . 
                                 $item['number'] . '. ' . htmlspecialchars_decode($item['title']) . '</a>';
                         
                         $lastLevel = $level;
                     }
                     
-                    // 关闭所有剩余的标签
                     if ($lastLevel >= $minLevel) {
                         $tree .= str_repeat('</li></ul>', $lastLevel - $minLevel);
                         $tree .= '</li></ul></div>';
@@ -396,7 +397,11 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                         $tree .= '</ul></div>';
                     }
                     
-                    return $tree . $content;
+                    // 将目录树保存到全局变量中
+                    $GLOBALS['menuTree'] = $tree;
+                    
+                    // 只返回处理后的内容，不包含目录树
+                    return $content;
                 }
             }
             return $content;
