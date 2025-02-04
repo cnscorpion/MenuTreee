@@ -458,35 +458,9 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                     debug_print('生成的目录树HTML: ' . $tree);
                     
                     // 在作者信息后插入目录树
-                    $pattern = '/<section class="joe_aside__item author"[^>]*>.*?<\/section>/s';
-                    if (preg_match($pattern, $content, $authorMatch)) {
-                        $content = str_replace($authorMatch[0], $authorMatch[0] . $tree, $content);
-                    } else {
-                        // 尝试匹配其他可能的作者信息标记
-                        $patterns = array(
-                            '/<div[^>]*class="[^"]*author[^"]*"[^>]*>.*?<\/div>/s',
-                            '/<section[^>]*class="[^"]*author[^"]*"[^>]*>.*?<\/section>/s',
-                            '/<aside[^>]*class="[^"]*author[^"]*"[^>]*>.*?<\/aside>/s'
-                        );
-                        
-                        $found = false;
-                        foreach ($patterns as $p) {
-                            if (preg_match($p, $content, $match)) {
-                                $content = str_replace($match[0], $match[0] . $tree, $content);
-                                $found = true;
-                                break;
-                            }
-                        }
-                        
-                        if (!$found) {
-                            // 如果找不到作者信息，就添加到第一个标题之前
-                            $firstHeading = reset($matches[0]);
-                            if ($firstHeading) {
-                                $content = str_replace($firstHeading, $tree . $firstHeading, $content);
-                            } else {
-                                $content = $tree . $content;
-                            }
-                        }
+                    $pattern = '/<section class="joe_aside__item author">/';
+                    if (preg_match($pattern, $content)) {
+                        $content = preg_replace($pattern, '<section class="joe_aside__item author">' . $tree, $content);
                     }
                     return $content;
                 }
