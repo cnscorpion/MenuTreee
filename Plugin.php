@@ -93,28 +93,22 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
             echo '<style>
             .menu-tree {
                 width: 100%;
-                background: #ffffff;
-                padding: 12px;
+                background: var(--background);
+                padding: 15px;
                 border-radius: 8px;
-                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
                 font-size: 13px;
-                margin-bottom: 15px;
-                border: 1px solid rgba(0, 0, 0, 0.05);
-            }
-
-            /* 固定侧边栏位置 */
-            .joe_aside {
-                position: sticky !important;
-                top: 20px;
+                margin: 15px 0;
+                border: 1px solid var(--classC);
+                box-sizing: border-box;
             }
 
             .menu-tree h3 {
                 margin: 0 0 10px 0;
                 padding-bottom: 8px;
-                border-bottom: 1px solid #f0f0f0;
+                border-bottom: 1px solid var(--classC);
                 font-size: 16px;
-                color: #2c3e50;
-                font-weight: 600;
+                color: var(--main);
+                font-weight: 500;
             }
 
             .menu-tree ul {
@@ -139,7 +133,7 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 top: 0;
                 bottom: 0;
                 width: 1px;
-                background: #f0f0f0;
+                background: var(--classC);
             }
 
             .menu-tree li {
@@ -153,7 +147,7 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
             }
 
             .menu-tree a {
-                color: #666;
+                color: var(--main);
                 text-decoration: none;
                 transition: all 0.2s;
                 display: block;
@@ -165,8 +159,8 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
             }
 
             .menu-tree a:hover {
-                color: #3498db;
-                background: rgba(52, 152, 219, 0.05);
+                color: var(--theme);
+                background: var(--classC);
                 padding-left: 8px;
             }
 
@@ -176,12 +170,18 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
             }
 
             .menu-tree ul::-webkit-scrollbar-thumb {
-                background: rgba(0, 0, 0, 0.2);
+                background: var(--classC);
                 border-radius: 2px;
             }
 
             .menu-tree ul::-webkit-scrollbar-track {
-                background: rgba(0, 0, 0, 0.05);
+                background: var(--classD);
+            }
+
+            /* 处理固定定位冲突 */
+            .joe_aside__item.flatterer {
+                position: relative !important;
+                top: 0 !important;
             }
             </style>
             <script>
