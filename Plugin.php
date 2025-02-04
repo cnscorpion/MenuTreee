@@ -92,20 +92,20 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
         try {
             echo '<style>
             .menu-tree {
-                position: fixed;
-                top: 100px;
-                right: 30px;
-                width: 280px;
-                max-height: calc(100vh - 180px);
-                overflow-y: auto;
+                position: relative;
+                width: 100%;
                 background: #ffffff;
                 padding: 12px;
                 border-radius: 8px;
                 box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
                 font-size: 13px;
-                z-index: 1000;
-                transition: all 0.3s ease;
+                margin-bottom: 15px;
                 border: 1px solid rgba(0, 0, 0, 0.05);
+            }
+
+            /* 确保目录树插入到正确的位置 */
+            .joe_aside .menu-tree {
+                order: 1;  /* 设置在 author section 之前 */
             }
 
             .menu-tree h3 {
@@ -121,6 +121,8 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 list-style: none;
                 padding-left: 0;
                 margin: 0;
+                max-height: calc(100vh - 400px);
+                overflow-y: auto;
             }
 
             .menu-tree ul ul {
@@ -168,45 +170,31 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 padding-left: 8px;
             }
 
-            @media screen and (max-width: 1400px) {
-                .menu-tree {
-                    width: 250px;
-                }
+            /* 添加滚动条样式 */
+            .menu-tree ul::-webkit-scrollbar {
+                width: 4px;
             }
 
-            @media screen and (max-width: 1200px) {
-                .menu-tree {
-                    position: relative;
-                    top: 0;
-                    right: 0;
-                    width: 100%;
-                    max-height: none;
-                    margin: 0 0 20px 0;
-                    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-                    padding: 10px;
-                }
+            .menu-tree ul::-webkit-scrollbar-thumb {
+                background: rgba(0, 0, 0, 0.2);
+                border-radius: 2px;
+            }
 
-                .menu-tree h3 {
-                    margin-bottom: 8px;
-                }
-
-                .menu-tree ul ul {
-                    padding-left: 12px;
-                }
-
-                .menu-tree li {
-                    margin: 1px 0;
-                }
-
-                .menu-tree a {
-                    padding: 2px 6px;
-                }
+            .menu-tree ul::-webkit-scrollbar-track {
+                background: rgba(0, 0, 0, 0.05);
             }
             </style>
             <script>
             document.addEventListener("DOMContentLoaded", function() {
                 const menuTree = document.querySelector(".menu-tree");
                 if (!menuTree) return;
+
+                // 将目录树移动到正确的位置
+                const aside = document.querySelector(".joe_aside");
+                const authorSection = document.querySelector(".joe_aside__item.author");
+                if (aside && authorSection) {
+                    aside.insertBefore(menuTree, authorSection);
+                }
 
                 // 点击叶子节点时滚动到对应位置
                 menuTree.querySelectorAll("a").forEach(link => {
