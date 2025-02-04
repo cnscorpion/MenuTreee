@@ -244,7 +244,7 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                     debug_print('找到标题数量: ' . count($matches[0]));
                     
                     // 初始化目录树
-                    $tree = '<div class="menu-tree"><h3>目录</h3><ul>';
+                    $tree = '<div class="menu-tree joe_aside__item"><h3>目录</h3><ul>';
                     $structure = array();
                     $minLevel = min(array_map('intval', $matches[1]));
                     $lastLevel = $minLevel;
@@ -278,7 +278,7 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                             'number' => $number
                         );
                         
-                        // 替换原文中的标题，使用 htmlspecialchars_decode 确保正确显示
+                        // 替换原文中的标题，添加id
                         $content = str_replace(
                             $matches[0][$i],
                             '<h' . $level . ' id="' . $id . '">' . $number . '. ' . htmlspecialchars_decode($matches[2][$i]) . '</h' . $level . '>',
@@ -290,29 +290,23 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                     foreach ($structure as $item) {
                         $level = $item['level'];
                         
-                        // 处理层级变化
                         if ($level > $lastLevel) {
-                            // 进入更深层级，开始新的子列表
                             $tree .= '<ul>';
                         } else if ($level < $lastLevel) {
-                            // 返回上层，关闭当前层级
                             $tree .= str_repeat('</li></ul>', $lastLevel - $level);
                             $tree .= '</li>';
                         } else {
-                            // 同级，关闭上一个项
                             if ($lastLevel != $minLevel) {
                                 $tree .= '</li>';
                             }
                         }
                         
-                        // 添加新项，使用 htmlspecialchars_decode 确保正确显示
                         $tree .= '<li><a href="#' . $item['id'] . '">' . 
                                 $item['number'] . '. ' . htmlspecialchars_decode($item['title']) . '</a>';
                         
                         $lastLevel = $level;
                     }
                     
-                    // 关闭所有剩余的标签
                     if ($lastLevel >= $minLevel) {
                         $tree .= str_repeat('</li></ul>', $lastLevel - $minLevel);
                         $tree .= '</li></ul></div>';
@@ -320,8 +314,19 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                         $tree .= '</ul></div>';
                     }
                     
-                    debug_print('生成的目录树HTML: ' . $tree);
-                    return $tree . $content;
+                    // 将目录树添加到内容中
+                    echo '<script>
+                    document.addEventListener("DOMContentLoaded", function() {
+                        const menuTree = document.querySelector(".menu-tree");
+                        const aside = document.querySelector(".joe_aside");
+                        const authorSection = document.querySelector(".joe_aside__item.author");
+                        if (menuTree && aside && authorSection) {
+                            authorSection.after(menuTree);
+                        }
+                    });
+                    </script>';
+                    
+                    return $content;
                 }
             }
             return $content;
