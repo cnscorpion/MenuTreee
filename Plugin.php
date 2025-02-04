@@ -90,6 +90,8 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
     public static function header()
     {
         try {
+            $menuTreeHtml = isset($GLOBALS['menuTree']) ? json_encode($GLOBALS['menuTree']) : '""';
+            
             echo '<style>
             .menu-tree {
                 width: 100%;
@@ -244,9 +246,11 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                     stickyWrapper.className = "sticky-wrapper";
 
                     // 将目录树插入到粘性容器中
-                    const menuTreeHtml = ' . json_encode($GLOBALS['menuTree'] ?? '') . ';
+                    const menuTreeHtml = ' . $menuTreeHtml . ';
                     if (menuTreeHtml) {
-                        stickyWrapper.innerHTML = menuTreeHtml;
+                        const tempDiv = document.createElement("div");
+                        tempDiv.innerHTML = menuTreeHtml;
+                        stickyWrapper.appendChild(tempDiv.firstChild);
                     }
 
                     // 将作者信息后面的所有元素移动到粘性容器中
