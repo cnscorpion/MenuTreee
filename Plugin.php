@@ -115,9 +115,10 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
             }
 
             /* 创建一个包裹容器用于固定定位 */
-            .sticky-sidebar {
+            .sticky-wrapper {
                 position: sticky;
                 top: 20px;
+                transition: top 0.3s;
             }
 
             .menu-tree h3 {
@@ -236,31 +237,25 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 const menuTree = document.querySelector(".menu-tree");
                 if (!menuTree) return;
 
-                // 创建粘性容器
-                const stickyWrapper = document.createElement("div");
-                stickyWrapper.className = "sticky-sidebar";
-
-                // 获取作者信息后面的所有元素
+                // 获取作者信息和侧边栏
                 const aside = document.querySelector(".joe_aside");
                 const authorSection = document.querySelector(".joe_aside__item.author");
                 
                 if (aside && authorSection) {
-                    // 先将目录树移到作者信息后面
-                    authorSection.after(menuTree);
+                    // 创建粘性容器
+                    const stickyWrapper = document.createElement("div");
+                    stickyWrapper.className = "sticky-wrapper";
 
-                    // 创建一个新的容器来包装除作者信息和目录树之外的其他元素
-                    const otherElementsWrapper = document.createElement("div");
-                    otherElementsWrapper.className = "sticky-sidebar";
+                    // 将作者信息后面的所有元素移动到粘性容器中
+                    let nextElement = authorSection.nextElementSibling;
+                    while (nextElement) {
+                        const currentElement = nextElement;
+                        nextElement = nextElement.nextElementSibling;
+                        stickyWrapper.appendChild(currentElement);
+                    }
 
-                    // 将除作者信息和目录树之外的元素移动到新容器中
-                    Array.from(aside.children).forEach(child => {
-                        if (child !== authorSection && child !== menuTree) {
-                            otherElementsWrapper.appendChild(child);
-                        }
-                    });
-
-                    // 将新容器插入到目录树后面
-                    menuTree.after(otherElementsWrapper);
+                    // 将粘性容器添加到作者信息后面
+                    authorSection.after(stickyWrapper);
                 }
 
                 // 点击叶子节点时滚动到对应位置
@@ -282,7 +277,7 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
 
                 // 监听滚动，高亮当前阅读的标题
                 let ticking = false;
-                const headings = document.querySelectorAll("h1, h2, h3, h4, h5, h6");
+                const headings = document.querySelectorAll(".joe_detail__article h1, .joe_detail__article h2, .joe_detail__article h3, .joe_detail__article h4, .joe_detail__article h5, .joe_detail__article h6");
                 const menuLinks = menuTree.querySelectorAll("a");
 
                 window.addEventListener("scroll", function() {
@@ -362,7 +357,7 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                             'number' => $number
                         );
                         
-                        // 替换原文中的标题，使用 htmlspecialchars_decode 确保正确显示
+                        // 替换原文中的标题，添加id
                         $content = str_replace(
                             $matches[0][$i],
                             '<h' . $level . ' id="' . $id . '">' . $number . '. ' . htmlspecialchars_decode($matches[2][$i]) . '</h' . $level . '>',
@@ -376,20 +371,17 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                         
                         // 处理层级变化
                         if ($level > $lastLevel) {
-                            // 进入更深层级，开始新的子列表
                             $tree .= '<ul>';
                         } else if ($level < $lastLevel) {
-                            // 返回上层，关闭当前层级
                             $tree .= str_repeat('</li></ul>', $lastLevel - $level);
                             $tree .= '</li>';
                         } else {
-                            // 同级，关闭上一个项
                             if ($lastLevel != $minLevel) {
                                 $tree .= '</li>';
                             }
                         }
                         
-                        // 添加新项，使用 htmlspecialchars_decode 确保正确显示
+                        // 添加新项
                         $tree .= '<li><a href="#' . $item['id'] . '">' . 
                                 $item['number'] . '. ' . htmlspecialchars_decode($item['title']) . '</a>';
                         
@@ -404,7 +396,6 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                         $tree .= '</ul></div>';
                     }
                     
-                    debug_print('生成的目录树HTML: ' . $tree);
                     return $tree . $content;
                 }
             }
