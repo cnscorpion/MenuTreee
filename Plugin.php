@@ -93,10 +93,10 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
             echo '<style>
             .menu-tree {
                 position: fixed;
-                top: 100px;
-                right: 30px;
-                width: 280px;
-                max-height: calc(100vh - 180px);
+                top: 80px;
+                right: 20px;
+                width: 250px;
+                max-height: calc(100vh - 160px);
                 overflow-y: auto;
                 background: #ffffff;
                 padding: 15px;
@@ -106,8 +106,6 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 z-index: 1000;
                 transition: all 0.3s ease;
                 border: 1px solid rgba(0, 0, 0, 0.05);
-                scrollbar-width: thin;
-                scrollbar-color: #e0e0e0 #ffffff;
             }
 
             .menu-tree::-webkit-scrollbar {
@@ -219,39 +217,9 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 font-weight: 500;
             }
 
-            @media screen and (max-width: 1400px) {
-                .menu-tree {
-                    width: 250px;
-                }
-            }
-
             @media screen and (max-width: 1200px) {
                 .menu-tree {
-                    position: relative;
-                    top: 0;
-                    right: 0;
-                    width: 100%;
-                    max-height: none;
-                    margin: 0 0 20px 0;
-                    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-                    padding: 12px;
-                }
-            }
-
-            @media screen and (max-width: 768px) {
-                .menu-tree {
-                    margin: 10px 0;
-                    padding: 10px;
-                }
-
-                .menu-tree h3 {
-                    font-size: 15px;
-                    margin-bottom: 8px;
-                }
-
-                .menu-tree a {
-                    padding: 3px 6px;
-                    font-size: 12px;
+                    display: none;
                 }
             }
             </style>
