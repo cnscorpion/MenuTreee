@@ -100,6 +100,7 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 border: 1px solid var(--classC);
                 box-sizing: border-box;
                 margin-bottom: 15px;
+                position: relative; /* 确保目录树跟随正常文档流 */
             }
 
             /* 侧边栏滚动效果 */
@@ -111,13 +112,27 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 position: relative;
                 z-index: 2;
                 background: var(--background);
+                margin-bottom: 15px;
             }
 
-            /* 固定除了 author 外的所有元素 */
-            .joe_aside__item:not(.author) {
-                position: sticky;
-                top: var(--padding-20);
-                margin-bottom: 15px;
+            /* 固定除了 author 和 menu-tree 外的所有元素 */
+            .joe_aside__item:not(.author):not(.menu-tree) {
+                position: fixed;
+                right: var(--main-right);
+                width: var(--aside-width);
+                background: var(--background);
+                z-index: 1;
+            }
+
+            /* 设置各个固定元素的位置 */
+            .joe_aside__item.timeline {
+                top: 95px;
+            }
+            .joe_aside__item.hot {
+                top: 290px;
+            }
+            .joe_aside__item.tags {
+                top: 485px;
             }
 
             .menu-tree h3 {
@@ -222,17 +237,6 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                             });
                         }
                     };
-                });
-
-                // 调整所有非 author 元素的 top 值，避免重叠
-                const asideItems = document.querySelectorAll(".joe_aside__item:not(.author)");
-                let currentTop = 20;
-                asideItems.forEach((item, index) => {
-                    if (index > 0) {
-                        const prevHeight = asideItems[index - 1].offsetHeight;
-                        currentTop += prevHeight + 15; // 15px 是元素间距
-                        item.style.top = currentTop + "px";
-                    }
                 });
             });
             </script>';
