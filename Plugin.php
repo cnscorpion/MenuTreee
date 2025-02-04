@@ -46,8 +46,9 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
         try {
             debug_print('开始激活插件...');
             
-            Typecho_Plugin::factory('Widget_Abstract_Contents')->contentEx = array('MenuTree_Plugin', 'contentEx');
+            // 修改钩子顺序，先处理内容，再输出头部
             Typecho_Plugin::factory('Widget_Archive')->header = array('MenuTree_Plugin', 'header');
+            Typecho_Plugin::factory('Widget_Abstract_Contents')->contentEx = array('MenuTree_Plugin', 'contentEx');
             
             debug_print('钩子注册完成');
             return _t('插件启用成功');
@@ -90,8 +91,6 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
     public static function header()
     {
         try {
-            $menuTreeHtml = isset($GLOBALS['menuTree']) ? json_encode($GLOBALS['menuTree']) : '""';
-            
             echo '<style>
             .menu-tree {
                 width: 100%;
@@ -233,87 +232,93 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                     max-height: 300px;
                 }
             }
-            </style>
-            <script>
-            document.addEventListener("DOMContentLoaded", function() {
-                // 获取作者信息和侧边栏
-                const aside = document.querySelector(".joe_aside");
-                const authorSection = document.querySelector(".joe_aside__item.author");
-                
-                if (aside && authorSection) {
-                    // 创建粘性容器
-                    const stickyWrapper = document.createElement("div");
-                    stickyWrapper.className = "sticky-wrapper";
+            </style>';
 
-                    // 将目录树插入到粘性容器中
-                    const menuTreeHtml = ' . $menuTreeHtml . ';
-                    if (menuTreeHtml) {
-                        const tempDiv = document.createElement("div");
-                        tempDiv.innerHTML = menuTreeHtml;
-                        stickyWrapper.appendChild(tempDiv.firstChild);
-                    }
-
-                    // 将作者信息后面的所有元素移动到粘性容器中
-                    let nextElement = authorSection.nextElementSibling;
-                    while (nextElement) {
-                        const currentElement = nextElement;
-                        nextElement = nextElement.nextElementSibling;
-                        stickyWrapper.appendChild(currentElement);
-                    }
-
-                    // 将粘性容器添加到作者信息后面
-                    authorSection.after(stickyWrapper);
-
-                    // 监听滚动，高亮当前阅读的标题
-                    const menuTree = stickyWrapper.querySelector(".menu-tree");
-                    if (menuTree) {
-                        let ticking = false;
-                        const headings = document.querySelectorAll(".joe_detail__article h1, .joe_detail__article h2, .joe_detail__article h3, .joe_detail__article h4, .joe_detail__article h5, .joe_detail__article h6");
-                        const menuLinks = menuTree.querySelectorAll("a");
-
-                        window.addEventListener("scroll", function() {
-                            if (!ticking) {
-                                window.requestAnimationFrame(function() {
-                                    let current = "";
-                                    headings.forEach(heading => {
-                                        const rect = heading.getBoundingClientRect();
-                                        if (rect.top <= 100) {
-                                            current = heading.id;
-                                        }
-                                    });
-
-                                    menuLinks.forEach(link => {
-                                        link.classList.remove("active");
-                                        if (link.getAttribute("href") === "#" + current) {
-                                            link.classList.add("active");
-                                        }
-                                    });
-                                    ticking = false;
-                                });
-                                ticking = true;
+            if (isset($GLOBALS['menuTree'])) {
+                echo '<script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    function initMenuTree() {
+                        const aside = document.querySelector(".joe_aside");
+                        const authorSection = document.querySelector(".joe_aside__item.author");
+                        
+                        if (aside && authorSection) {
+                            // 创建粘性容器
+                            const stickyWrapper = document.createElement("div");
+                            stickyWrapper.className = "sticky-wrapper";
+                            
+                            // 直接插入目录树HTML
+                            stickyWrapper.innerHTML = ' . json_encode($GLOBALS['menuTree']) . ';
+                            
+                            // 将作者信息后面的所有元素移动到粘性容器中
+                            let nextElement = authorSection.nextElementSibling;
+                            while (nextElement) {
+                                const currentElement = nextElement;
+                                nextElement = nextElement.nextElementSibling;
+                                stickyWrapper.appendChild(currentElement);
                             }
-                        });
-
-                        // 点击目录项时滚动到对应位置
-                        menuLinks.forEach(link => {
-                            link.onclick = function(e) {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                const targetId = this.getAttribute("href").substring(1);
-                                const targetElement = document.getElementById(targetId);
-                                if (targetElement) {
-                                    const offset = targetElement.offsetTop - 20;
-                                    window.scrollTo({
-                                        top: offset,
-                                        behavior: "smooth"
-                                    });
-                                }
-                            };
-                        });
+                            
+                            // 将粘性容器添加到作者信息后面
+                            authorSection.after(stickyWrapper);
+                            
+                            // 设置滚动监听
+                            const menuTree = stickyWrapper.querySelector(".menu-tree");
+                            if (menuTree) {
+                                const headings = document.querySelectorAll(".joe_detail__article h1, .joe_detail__article h2, .joe_detail__article h3, .joe_detail__article h4, .joe_detail__article h5, .joe_detail__article h6");
+                                const menuLinks = menuTree.querySelectorAll("a");
+                                
+                                // 点击目录项时滚动到对应位置
+                                menuLinks.forEach(link => {
+                                    link.onclick = function(e) {
+                                        e.preventDefault();
+                                        const targetId = this.getAttribute("href").substring(1);
+                                        const targetElement = document.getElementById(targetId);
+                                        if (targetElement) {
+                                            const offset = targetElement.offsetTop - 20;
+                                            window.scrollTo({
+                                                top: offset,
+                                                behavior: "smooth"
+                                            });
+                                        }
+                                    };
+                                });
+                                
+                                // 监听滚动，高亮当前阅读的标题
+                                let ticking = false;
+                                window.addEventListener("scroll", function() {
+                                    if (!ticking) {
+                                        window.requestAnimationFrame(function() {
+                                            let current = "";
+                                            headings.forEach(heading => {
+                                                const rect = heading.getBoundingClientRect();
+                                                if (rect.top <= 100) {
+                                                    current = heading.id;
+                                                }
+                                            });
+                                            
+                                            menuLinks.forEach(link => {
+                                                link.classList.remove("active");
+                                                if (link.getAttribute("href") === "#" + current) {
+                                                    link.classList.add("active");
+                                                }
+                                            });
+                                            ticking = false;
+                                        });
+                                        ticking = true;
+                                    }
+                                });
+                            }
+                        }
                     }
-                }
-            });
-            </script>';
+                    
+                    // 确保DOM加载完成后初始化
+                    if (document.readyState === "loading") {
+                        document.addEventListener("DOMContentLoaded", initMenuTree);
+                    } else {
+                        initMenuTree();
+                    }
+                });
+                </script>';
+            }
         } catch (Exception $e) {
             debug_print('CSS输出错误：' . $e->getMessage());
         }
