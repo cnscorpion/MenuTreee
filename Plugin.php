@@ -99,10 +99,8 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 font-size: 14px;
                 border: 1px solid var(--classC);
                 box-sizing: border-box;
-                position: sticky;
-                top: 20px;
+                position: relative;
                 margin-bottom: 15px;
-                transition: top .3s;
             }
 
             /* 侧边栏基础样式 */
@@ -113,9 +111,16 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
             /* 作者信息样式 */
             .joe_aside__item.author {
                 position: relative;
-                z-index: 2;
                 background: var(--background);
                 margin-bottom: 15px;
+            }
+
+            /* 创建一个包裹容器用于固定定位 */
+            .menu-tree-wrapper {
+                position: sticky;
+                top: 20px;
+                margin-bottom: 15px;
+                z-index: 1;
             }
 
             .menu-tree h3 {
@@ -199,6 +204,12 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 padding-left: 12px;
             }
 
+            .menu-tree a.active {
+                color: var(--theme);
+                background: var(--classC);
+                padding-left: 12px;
+            }
+
             /* 添加滚动条样式 */
             .menu-tree ul::-webkit-scrollbar {
                 width: 4px;
@@ -214,10 +225,9 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
             }
 
             @media screen and (max-width: 768px) {
-                .menu-tree {
+                .menu-tree-wrapper {
                     position: relative;
                     top: 0;
-                    margin: 15px 0;
                 }
                 .menu-tree ul {
                     max-height: 300px;
@@ -229,10 +239,15 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 const menuTree = document.querySelector(".menu-tree");
                 if (!menuTree) return;
 
-                // 将目录树移动到作者信息下方
+                // 创建包裹容器
+                const wrapper = document.createElement("div");
+                wrapper.className = "menu-tree-wrapper";
+                wrapper.appendChild(menuTree);
+
+                // 将包裹容器插入到作者信息下方
                 const authorSection = document.querySelector(".joe_aside__item.author");
                 if (authorSection) {
-                    authorSection.parentNode.insertBefore(menuTree, authorSection.nextSibling);
+                    authorSection.parentNode.insertBefore(wrapper, authorSection.nextSibling);
                 }
 
                 // 点击叶子节点时滚动到对应位置
