@@ -92,7 +92,6 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
         try {
             echo '<style>
             .menu-tree {
-                position: relative;
                 width: 100%;
                 background: #ffffff;
                 padding: 12px;
@@ -103,9 +102,10 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 border: 1px solid rgba(0, 0, 0, 0.05);
             }
 
-            /* 确保目录树插入到正确的位置 */
-            .joe_aside .menu-tree {
-                order: 1;  /* 设置在 author section 之前 */
+            /* 固定侧边栏位置 */
+            .joe_aside {
+                position: sticky !important;
+                top: 20px;
             }
 
             .menu-tree h3 {
@@ -121,7 +121,7 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 list-style: none;
                 padding-left: 0;
                 margin: 0;
-                max-height: calc(100vh - 400px);
+                max-height: 400px;
                 overflow-y: auto;
             }
 
@@ -189,11 +189,10 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 const menuTree = document.querySelector(".menu-tree");
                 if (!menuTree) return;
 
-                // 将目录树移动到正确的位置
-                const aside = document.querySelector(".joe_aside");
+                // 将目录树移动到作者信息下方
                 const authorSection = document.querySelector(".joe_aside__item.author");
-                if (aside && authorSection) {
-                    aside.insertBefore(menuTree, authorSection);
+                if (authorSection) {
+                    authorSection.parentNode.insertBefore(menuTree, authorSection.nextSibling);
                 }
 
                 // 点击叶子节点时滚动到对应位置
@@ -204,7 +203,11 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                         const targetId = this.getAttribute("href").substring(1);
                         const targetElement = document.getElementById(targetId);
                         if (targetElement) {
-                            targetElement.scrollIntoView({ behavior: "smooth" });
+                            const offset = targetElement.offsetTop - 20;
+                            window.scrollTo({
+                                top: offset,
+                                behavior: "smooth"
+                            });
                         }
                     };
                 });
