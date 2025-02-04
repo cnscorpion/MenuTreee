@@ -92,19 +92,14 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
         try {
             echo '<style>
             .menu-tree {
-                position: fixed;
-                top: 100px;
-                right: 30px;
-                width: 280px;
-                max-height: calc(100vh - 180px);
-                overflow-y: auto;
+                position: relative;
+                width: 100%;
                 background: #ffffff;
                 padding: 15px;
                 border-radius: 8px;
                 box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
                 font-size: 13px;
-                z-index: 1000;
-                transition: all 0.3s ease;
+                margin: 15px 0;
                 border: 1px solid rgba(0, 0, 0, 0.05);
                 scrollbar-width: thin;
                 scrollbar-color: #e0e0e0 #ffffff;
@@ -221,27 +216,22 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
 
             @media screen and (max-width: 1400px) {
                 .menu-tree {
-                    width: 250px;
+                    width: 100%;
+                    margin: 12px 0;
                 }
             }
 
             @media screen and (max-width: 1200px) {
                 .menu-tree {
-                    position: relative;
-                    top: 0;
-                    right: 0;
-                    width: 100%;
-                    max-height: none;
-                    margin: 0 0 20px 0;
-                    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
                     padding: 12px;
+                    margin: 10px 0;
                 }
             }
 
             @media screen and (max-width: 768px) {
                 .menu-tree {
-                    margin: 10px 0;
                     padding: 10px;
+                    margin: 8px 0;
                 }
 
                 .menu-tree h3 {
@@ -455,8 +445,14 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                         $tree .= '</ul></div>';
                     }
                     
-                    debug_print('生成的目录树HTML: ' . $tree);
-                    return $tree . $content;
+                    // 在作者信息后插入目录
+                    $pattern = '/<div class="post-author">.*?<\/div>/is';
+                    if (preg_match($pattern, $content, $authorMatch)) {
+                        $content = str_replace($authorMatch[0], $authorMatch[0] . $tree, $content);
+                    } else {
+                        // 如果找不到作者信息，就插入到文章开头
+                        $content = $tree . $content;
+                    }
                 }
             }
             return $content;
