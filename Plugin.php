@@ -46,8 +46,8 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
         try {
             debug_print('开始激活插件...');
             
+            Typecho_Plugin::factory('Widget_Abstract_Contents')->contentEx = array('MenuTree_Plugin', 'contentEx');
             Typecho_Plugin::factory('Widget_Archive')->header = array('MenuTree_Plugin', 'header');
-            Typecho_Plugin::factory('Widget_Archive')->sidebarAfterAuthor = array('MenuTree_Plugin', 'renderMenu');
             
             debug_print('钩子注册完成');
             return _t('插件启用成功');
@@ -92,14 +92,19 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
         try {
             echo '<style>
             .menu-tree {
-                position: relative;
-                width: 100%;
+                position: fixed;
+                top: 100px;
+                right: 30px;
+                width: 280px;
+                max-height: calc(100vh - 180px);
+                overflow-y: auto;
                 background: #ffffff;
                 padding: 15px;
                 border-radius: 8px;
                 box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
                 font-size: 13px;
-                margin: 15px 0;
+                z-index: 1000;
+                transition: all 0.3s ease;
                 border: 1px solid rgba(0, 0, 0, 0.05);
                 scrollbar-width: thin;
                 scrollbar-color: #e0e0e0 #ffffff;
@@ -216,22 +221,27 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
 
             @media screen and (max-width: 1400px) {
                 .menu-tree {
-                    width: 100%;
-                    margin: 12px 0;
+                    width: 250px;
                 }
             }
 
             @media screen and (max-width: 1200px) {
                 .menu-tree {
+                    position: relative;
+                    top: 0;
+                    right: 0;
+                    width: 100%;
+                    max-height: none;
+                    margin: 0 0 20px 0;
+                    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
                     padding: 12px;
-                    margin: 10px 0;
                 }
             }
 
             @media screen and (max-width: 768px) {
                 .menu-tree {
+                    margin: 10px 0;
                     padding: 10px;
-                    margin: 8px 0;
                 }
 
                 .menu-tree h3 {
@@ -356,88 +366,112 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
     }
 
     /**
-     * 渲染目录
+     * 内容处理
      */
-    public static function renderMenu($widget)
+    public static function contentEx($content, $widget, $lastResult)
     {
-        if ($widget->is('single')) {
-            $content = $widget->content;
-            $matches = array();
-            preg_match_all('/<h([1-6])[^>]*>(.*?)<\/h\1>/i', $content, $matches);
-            
-            if (!empty($matches[0])) {
-                // 初始化目录树
-                $tree = '<div class="menu-tree"><h3>目录</h3><ul>';
-                $structure = array();
-                $minLevel = min(array_map('intval', $matches[1]));
-                $lastLevel = $minLevel;
-                $counters = array_fill(0, 6, 0);
+        try {
+            if ($widget instanceof Widget_Archive && $widget->is('single')) {
+                $matches = array();
+                preg_match_all('/<h([1-6])[^>]*>(.*?)<\/h\1>/i', $content, $matches);
                 
-                // 第一遍循环：构建结构数组
-                for ($i = 0; $i < count($matches[0]); $i++) {
-                    $level = (int)$matches[1][$i];
-                    $title = trim(strip_tags($matches[2][$i]));
-                    $id = 'title-' . $i;
+                if (!empty($matches[0])) {
+                    debug_print('找到标题数量: ' . count($matches[0]));
                     
-                    // 计算编号
-                    $number = '';
-                    for ($j = $minLevel; $j <= $level; $j++) {
-                        if ($j == $level) {
-                            $counters[$j-1]++;
-                            $number .= $counters[$j-1];
-                        } else {
-                            $number .= $counters[$j-1] . '.';
+                    // 初始化目录树
+                    $tree = '<div class="menu-tree"><h3>目录</h3><ul>';
+                    $structure = array();
+                    $minLevel = min(array_map('intval', $matches[1]));
+                    $lastLevel = $minLevel;
+                    $counters = array_fill(0, 6, 0);
+                    
+                    // 第一遍循环：构建结构数组
+                    for ($i = 0; $i < count($matches[0]); $i++) {
+                        $level = (int)$matches[1][$i];
+                        $title = trim(strip_tags($matches[2][$i]));
+                        $id = 'title-' . $i;
+                        
+                        // 计算编号
+                        $number = '';
+                        for ($j = $minLevel; $j <= $level; $j++) {
+                            if ($j == $level) {
+                                $counters[$j-1]++;
+                                $number .= $counters[$j-1];
+                            } else {
+                                $number .= $counters[$j-1] . '.';
+                            }
                         }
-                    }
-                    // 重置更深层级的计数器
-                    for ($j = $level + 1; $j < 6; $j++) {
-                        $counters[$j-1] = 0;
+                        // 重置更深层级的计数器
+                        for ($j = $level + 1; $j < 6; $j++) {
+                            $counters[$j-1] = 0;
+                        }
+                        
+                        $structure[] = array(
+                            'level' => $level,
+                            'title' => $title,
+                            'id' => $id,
+                            'number' => $number
+                        );
+                        
+                        // 替换原文中的标题，使用 htmlspecialchars_decode 确保正确显示
+                        $content = str_replace(
+                            $matches[0][$i],
+                            '<h' . $level . ' id="' . $id . '">' . $number . '. ' . htmlspecialchars_decode($matches[2][$i]) . '</h' . $level . '>',
+                            $content
+                        );
                     }
                     
-                    $structure[] = array(
-                        'level' => $level,
-                        'title' => $title,
-                        'id' => $id,
-                        'number' => $number
-                    );
-                }
-                
-                // 第二遍循环：构建HTML
-                foreach ($structure as $item) {
-                    $level = $item['level'];
-                    
-                    // 处理层级变化
-                    if ($level > $lastLevel) {
-                        // 进入更深层级，开始新的子列表
-                        $tree .= '<ul>';
-                    } else if ($level < $lastLevel) {
-                        // 返回上层，关闭当前层级
-                        $tree .= str_repeat('</li></ul>', $lastLevel - $level);
-                        $tree .= '</li>';
-                    } else {
-                        // 同级，关闭上一个项
-                        if ($lastLevel != $minLevel) {
+                    // 第二遍循环：构建HTML
+                    foreach ($structure as $item) {
+                        $level = $item['level'];
+                        
+                        // 处理层级变化
+                        if ($level > $lastLevel) {
+                            // 进入更深层级，开始新的子列表
+                            $tree .= '<ul>';
+                        } else if ($level < $lastLevel) {
+                            // 返回上层，关闭当前层级
+                            $tree .= str_repeat('</li></ul>', $lastLevel - $level);
                             $tree .= '</li>';
+                        } else {
+                            // 同级，关闭上一个项
+                            if ($lastLevel != $minLevel) {
+                                $tree .= '</li>';
+                            }
                         }
+                        
+                        // 添加新项，使用 htmlspecialchars_decode 确保正确显示
+                        $tree .= '<li><a href="#' . $item['id'] . '">' . 
+                                $item['number'] . '. ' . htmlspecialchars_decode($item['title']) . '</a>';
+                        
+                        $lastLevel = $level;
                     }
                     
-                    // 添加新项
-                    $tree .= '<li><a href="#' . $item['id'] . '">' . 
-                            $item['number'] . '. ' . htmlspecialchars_decode($item['title']) . '</a>';
+                    // 关闭所有剩余的标签
+                    if ($lastLevel >= $minLevel) {
+                        $tree .= str_repeat('</li></ul>', $lastLevel - $minLevel);
+                        $tree .= '</li></ul></div>';
+                    } else {
+                        $tree .= '</ul></div>';
+                    }
                     
-                    $lastLevel = $level;
+                    debug_print('生成的目录树HTML: ' . $tree);
+                    
+                    // 在作者信息后插入目录树
+                    $pattern = '/<section class="joe_aside__item author">.*?<\/section>/s';
+                    if (preg_match($pattern, $content, $authorMatch)) {
+                        $content = preg_replace($pattern, $authorMatch[0] . $tree, $content);
+                    } else {
+                        // 如果找不到作者信息，就直接添加到内容开头
+                        $content = $tree . $content;
+                    }
+                    return $content;
                 }
-                
-                // 关闭所有剩余的标签
-                if ($lastLevel >= $minLevel) {
-                    $tree .= str_repeat('</li></ul>', $lastLevel - $minLevel);
-                    $tree .= '</li></ul></div>';
-                } else {
-                    $tree .= '</ul></div>';
-                }
-                
-                echo $tree;
             }
+            return $content;
+        } catch (Exception $e) {
+            debug_print('内容处理错误：' . $e->getMessage());
+            return $content;
         }
     }
 
