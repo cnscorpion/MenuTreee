@@ -99,22 +99,51 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 max-height: calc(100vh - 180px);
                 overflow-y: auto;
                 background: #ffffff;
-                padding: 12px;
+                padding: 15px;
                 border-radius: 8px;
                 box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
                 font-size: 13px;
                 z-index: 1000;
                 transition: all 0.3s ease;
                 border: 1px solid rgba(0, 0, 0, 0.05);
+                scrollbar-width: thin;
+                scrollbar-color: #e0e0e0 #ffffff;
+            }
+
+            .menu-tree::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            .menu-tree::-webkit-scrollbar-track {
+                background: #ffffff;
+            }
+
+            .menu-tree::-webkit-scrollbar-thumb {
+                background-color: #e0e0e0;
+                border-radius: 3px;
             }
 
             .menu-tree h3 {
-                margin: 0 0 10px 0;
+                margin: 0 0 12px 0;
                 padding-bottom: 8px;
                 border-bottom: 1px solid #f0f0f0;
                 font-size: 16px;
                 color: #2c3e50;
                 font-weight: 600;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .menu-tree h3 .toggle-all {
+                cursor: pointer;
+                font-size: 14px;
+                color: #666;
+                transition: color 0.2s;
+            }
+
+            .menu-tree h3 .toggle-all:hover {
+                color: #3498db;
             }
 
             .menu-tree ul {
@@ -124,10 +153,12 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
             }
 
             .menu-tree ul ul {
-                padding-left: 12px;
+                padding-left: 16px;
                 position: relative;
                 display: block;
                 margin: 2px 0;
+                overflow: hidden;
+                transition: max-height 0.3s ease;
             }
 
             .menu-tree ul ul::before {
@@ -141,13 +172,26 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
             }
 
             .menu-tree li {
-                margin: 1px 0;
+                margin: 3px 0;
                 line-height: 1.4;
                 position: relative;
             }
 
-            .menu-tree li::before {
-                display: none;
+            .menu-tree li.has-submenu > a::after {
+                content: "▼";
+                font-size: 8px;
+                margin-left: 5px;
+                transition: transform 0.3s;
+                display: inline-block;
+                vertical-align: middle;
+            }
+
+            .menu-tree li.has-submenu.collapsed > a::after {
+                transform: rotate(-90deg);
+            }
+
+            .menu-tree li.has-submenu.collapsed > ul {
+                max-height: 0;
             }
 
             .menu-tree a {
@@ -155,17 +199,24 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 text-decoration: none;
                 transition: all 0.2s;
                 display: block;
-                padding: 3px 6px;
+                padding: 4px 8px;
                 border-radius: 4px;
                 font-weight: normal;
                 position: relative;
                 font-size: 13px;
+                line-height: 1.5;
             }
 
             .menu-tree a:hover {
                 color: #3498db;
                 background: rgba(52, 152, 219, 0.05);
-                padding-left: 8px;
+                padding-left: 12px;
+            }
+
+            .menu-tree a.active {
+                color: #3498db;
+                background: rgba(52, 152, 219, 0.08);
+                font-weight: 500;
             }
 
             @media screen and (max-width: 1400px) {
@@ -183,23 +234,24 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                     max-height: none;
                     margin: 0 0 20px 0;
                     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+                    padding: 12px;
+                }
+            }
+
+            @media screen and (max-width: 768px) {
+                .menu-tree {
+                    margin: 10px 0;
                     padding: 10px;
                 }
 
                 .menu-tree h3 {
+                    font-size: 15px;
                     margin-bottom: 8px;
                 }
 
-                .menu-tree ul ul {
-                    padding-left: 12px;
-                }
-
-                .menu-tree li {
-                    margin: 1px 0;
-                }
-
                 .menu-tree a {
-                    padding: 2px 6px;
+                    padding: 3px 6px;
+                    font-size: 12px;
                 }
             }
             </style>
@@ -208,18 +260,104 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 const menuTree = document.querySelector(".menu-tree");
                 if (!menuTree) return;
 
+                // 添加折叠/展开所有按钮
+                const title = menuTree.querySelector("h3");
+                const toggleBtn = document.createElement("span");
+                toggleBtn.className = "toggle-all";
+                toggleBtn.textContent = "展开全部";
+                toggleBtn.onclick = toggleAll;
+                title.appendChild(toggleBtn);
+
+                // 为有子菜单的项添加折叠功能
+                menuTree.querySelectorAll("li").forEach(li => {
+                    if (li.querySelector("ul")) {
+                        li.classList.add("has-submenu");
+                        li.querySelector("a").addEventListener("click", function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            li.classList.toggle("collapsed");
+                        });
+                    }
+                });
+
                 // 点击叶子节点时滚动到对应位置
                 menuTree.querySelectorAll("a").forEach(link => {
-                    link.onclick = function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        const targetId = this.getAttribute("href").substring(1);
-                        const targetElement = document.getElementById(targetId);
-                        if (targetElement) {
-                            targetElement.scrollIntoView({ behavior: "smooth" });
-                        }
-                    };
+                    if (!link.parentElement.classList.contains("has-submenu")) {
+                        link.onclick = function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const targetId = this.getAttribute("href").substring(1);
+                            const targetElement = document.getElementById(targetId);
+                            if (targetElement) {
+                                targetElement.scrollIntoView({ behavior: "smooth" });
+                                // 更新当前活动项
+                                menuTree.querySelectorAll("a").forEach(a => a.classList.remove("active"));
+                                this.classList.add("active");
+                            }
+                        };
+                    }
                 });
+
+                // 监听滚动事件，高亮当前可见的标题
+                let headings = [];
+                menuTree.querySelectorAll("a").forEach(link => {
+                    const targetId = link.getAttribute("href").substring(1);
+                    const targetElement = document.getElementById(targetId);
+                    if (targetElement) {
+                        headings.push({
+                            element: targetElement,
+                            link: link
+                        });
+                    }
+                });
+
+                function updateActiveHeading() {
+                    const scrollPosition = window.scrollY;
+                    const windowHeight = window.innerHeight;
+                    
+                    let current = headings[0];
+                    for (let heading of headings) {
+                        const elementTop = heading.element.getBoundingClientRect().top + scrollPosition;
+                        if (scrollPosition >= elementTop - 100) {
+                            current = heading;
+                        }
+                    }
+
+                    menuTree.querySelectorAll("a").forEach(a => a.classList.remove("active"));
+                    if (current) {
+                        current.link.classList.add("active");
+                        // 展开父菜单
+                        let parent = current.link.parentElement;
+                        while (parent && parent.classList.contains("has-submenu")) {
+                            parent.classList.remove("collapsed");
+                            parent = parent.parentElement.closest("li");
+                        }
+                    }
+                }
+
+                function toggleAll() {
+                    const isExpanded = this.textContent === "折叠全部";
+                    this.textContent = isExpanded ? "展开全部" : "折叠全部";
+                    menuTree.querySelectorAll("li.has-submenu").forEach(li => {
+                        li.classList.toggle("collapsed", isExpanded);
+                    });
+                }
+
+                // 使用 Intersection Observer 优化滚动监听
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            updateActiveHeading();
+                        }
+                    });
+                }, {
+                    threshold: 0.1
+                });
+
+                headings.forEach(heading => observer.observe(heading.element));
+
+                // 初始化时更新一次
+                updateActiveHeading();
             });
             </script>';
         } catch (Exception $e) {
