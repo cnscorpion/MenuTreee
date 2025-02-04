@@ -99,7 +99,6 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 font-size: 14px;
                 border: 1px solid var(--classC);
                 box-sizing: border-box;
-                position: relative;
                 margin-bottom: 15px;
             }
 
@@ -116,11 +115,9 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
             }
 
             /* 创建一个包裹容器用于固定定位 */
-            .menu-tree-wrapper {
+            .sticky-sidebar {
                 position: sticky;
                 top: 20px;
-                margin-bottom: 15px;
-                z-index: 1;
             }
 
             .menu-tree h3 {
@@ -239,15 +236,24 @@ class MenuTree_Plugin implements Typecho_Plugin_Interface
                 const menuTree = document.querySelector(".menu-tree");
                 if (!menuTree) return;
 
-                // 创建包裹容器
-                const wrapper = document.createElement("div");
-                wrapper.className = "menu-tree-wrapper";
-                wrapper.appendChild(menuTree);
+                // 创建粘性容器
+                const stickyWrapper = document.createElement("div");
+                stickyWrapper.className = "sticky-sidebar";
 
-                // 将包裹容器插入到作者信息下方
+                // 获取作者信息后面的所有元素
+                const aside = document.querySelector(".joe_aside");
                 const authorSection = document.querySelector(".joe_aside__item.author");
-                if (authorSection) {
-                    authorSection.parentNode.insertBefore(wrapper, authorSection.nextSibling);
+                
+                if (aside && authorSection) {
+                    // 将作者信息后面的所有元素移动到粘性容器中
+                    Array.from(aside.children).forEach(child => {
+                        if (child !== authorSection) {
+                            stickyWrapper.appendChild(child);
+                        }
+                    });
+
+                    // 将粘性容器插入到作者信息后面
+                    authorSection.after(stickyWrapper);
                 }
 
                 // 点击叶子节点时滚动到对应位置
